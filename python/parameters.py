@@ -62,6 +62,6 @@ general paramaters
 res_factor			= 10		#factor by which the azimuth-resolution will be increased
 
 ###file_names
-#file_name 			= './data/dwd_rad_boo/sweeph5allm/2016/06/07/ras07-pcpng01_sweeph5allm_any_00-2016060716003300-boo-10132-hd5'
+file_name 			= './data/dwd_rad_boo/sweeph5allm/2016/06/07/ras07-pcpng01_sweeph5allm_any_00-2016060716003300-boo-10132-hd5'
 #file_name			= './data/level1_hdcp2/2016/06/m4t_HHG_wrx00_l1_dbz_v00_20160607160000.nc'
-file_name			= './data/level2_hdcp2/2016/06/m4t_HHG_wrx00_l2_dbz_v00_20160607160000.nc'
+#file_name			= './data/level2_hdcp2/2016/06/m4t_HHG_wrx00_l2_dbz_v00_20160607160000.nc'
