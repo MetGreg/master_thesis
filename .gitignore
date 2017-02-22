@@ -91,3 +91,5 @@ ENV/
 # Gregor 
 *.dat
 *.png
+*.swp
+
