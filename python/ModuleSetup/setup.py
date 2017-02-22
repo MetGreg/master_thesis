@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 setup(
 name = 'MasterModule',
 version = '0.1.0',
-description = 'Module for python programs of master thesis',
-long_description = '',
+description = 'Classes of master thesis',
+long_description = 'Contains all classes needed for programs of master thesis',
 keywords = 'radar, master_thesis',
 license = 'GPLv3',
 author = 'Gregor Möller',
