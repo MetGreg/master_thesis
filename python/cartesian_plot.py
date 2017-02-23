@@ -12,8 +12,8 @@ its parameters can be defined in parameters.py.
 '''
 
 ###QUESTIONS/to-dos
-#-modules and objects, where do I have to import modules?
 #-deal with warnings
+#-improve plot
 
 ########################################################################
 ### modules ###
@@ -43,7 +43,7 @@ from MasterModule.GridParameter import GridParameter
 ########################################################################
 
 '''
-Some parameters can be set in parameters.py
+Some parameters, that can be set in parameters.py
 '''
 
 file_name 	= parameters.file_name	#name of data file
@@ -248,7 +248,10 @@ ax.set_yticklabels(ylabel,fontsize = 16)
 ax.set_xticks(np.arange(0,ticks,ticks/10), minor = False)
 ax.yaxis.grid(True, which='major')
 ax.xaxis.grid(True, which='major')
-plt.title(str(radar.name) + '-data on cartesian grid with res. of ' + str(int(new_grid.par.res_m)) + ' m, with ' + str(res_factor) + ' x incr. azi-res.',fontsize = 24)
+plt.title(
+	str(radar.name) + '-data: ' + str(radar.data.time_start.time())[0:8] + ' - ' + str(radar.data.time_end.time())[0:8],
+	fontsize = 24
+ )
 plt.xlabel('longitude',fontsize = 18)
 plt.ylabel('latitude',fontsize = 18)
 plt.show()

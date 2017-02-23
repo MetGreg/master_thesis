@@ -44,7 +44,7 @@ grid_par			= [[lon_start,lon_end],[lat_start,lat_end],resolution] 	#grid paramet
 parameters specific for pattern radar data
 '''
 
-minute				= 1								#pattern data has one file per hour. This parameter defines which minute of the hour shall be plotted. (Minute 1 == first measurement, minute 60 == last measurement of hour)
+minute				= 1								#pattern data has one file per hour. This parameter defines which minute of the hour shall be plotted. Measurements in 0.5 minute steps (--> first measurement at minute 0.5). This time (minute) refers to time at which radar scan ended. 
 refl_key			= 'dbz_ac2'						#level 2 pattern data has two processing steps. Define here which one shall be plotted. dbz_ac1 = step1, dbz_ac2 = step2
 
 

@@ -10,6 +10,7 @@
 ### modules ###
 ########################################################################
 import numpy as np
+from datetime import datetime
 from netCDF4 import Dataset
 from .MainRadar import Radar
 from .RadarData import RadarData	
@@ -77,6 +78,8 @@ class Pattern(Radar):
 		range_coords				= nc.variables['range'][:]										#array of to data points corresponding range coordinates
 		azi_coords					= nc.variables['azi'][:]										#array of to data points corresponding azimuth coordinates
 		refl						= nc.variables[self.refl_key][:][int((self.minute - 0.5)*2)]	#array of measured reflectivity
+		time_start					= nc.variables['time_bnds'][int((self.minute - 0.5)*2)][0]		#time in epoch (linux time) at which radar scan started
+		time_end					= nc.variables['time_bnds'][int((self.minute - 0.5)*2)][1]		#time in epoch (linux time) at which radar scan ended
 		
 		###save the data to RadarData object
 		radar_data.lon_site			= float(lon_site)												#longitude coordinate of radar site
@@ -87,6 +90,8 @@ class Pattern(Radar):
 		radar_data.azi_coords		= azi_coords													#array of to data points corresponding azimuth coordinates
 		radar_data.azi_coords_inc	= np.arange(azi_start,azi_steps*azi_rays,azi_steps/res_factor)	#array of corresponding azimuth coordinates to data points with artificially increased resolution
 		radar_data.refl				= refl															#array of measured reflectivity
+		radar_data.time_start		= datetime.utcfromtimestamp(time_start)							#time in utc at which radar scan started
+		radar_data.time_end			= datetime.utcfromtimestamp(time_end)							#time in utc at which radar scan ended
 		
 		###save the data to Pattern object
 		self.data 					= radar_data

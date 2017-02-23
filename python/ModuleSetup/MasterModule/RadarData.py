@@ -10,6 +10,7 @@
 ### modules ###
 ########################################################################
 import numpy as np
+from datetime import datetime
 
 
 
@@ -326,3 +327,52 @@ class RadarData:
 		assert len(new_refl_inc.shape) == 2, 'new refl_inc is not 2-dimensional'
 		self._refl_inc = new_refl_inc
 
+
+
+
+
+	####################################################################
+	### starting time ###
+	####################################################################
+	@property
+	def time_start(self):
+		
+		'''
+		Time at which scan started in UTC. Must be datetime object.
+		'''
+		
+		try:
+			return self._time_start
+		except AttributeError:
+			return 0
+		
+			
+	@time_start.setter
+	def time_start(self, new_time_start):
+		assert isinstance(new_time_start, datetime), 'new time_start is no datetime object'
+		self._time_start = new_time_start
+
+
+
+
+
+	####################################################################
+	### ending time ###
+	####################################################################
+	@property
+	def time_end(self):
+		
+		'''
+		Time at which scan ended in UTC. Must be datetime object.
+		'''
+		
+		try:
+			return self._time_end
+		except AttributeError:
+			return 0
+		
+			
+	@time_end.setter
+	def time_end(self, new_time_end):
+		assert isinstance(new_time_end, datetime), 'new time_start is no datetime object'
+		self._time_end = new_time_end

@@ -11,6 +11,7 @@
 ########################################################################
 import h5py
 import numpy as np
+from datetime import datetime
 from .MainRadar import Radar
 from .RadarData import RadarData
 
@@ -77,6 +78,9 @@ class Dwd(Radar):
 			gain 						= h5py_file.get('dataset1/data1/what').attrs['gain']				#factor (gain), which is needed to correct the dwd reflectivity to normal dbz values 
 			offset 						= h5py_file.get('dataset1/data1/what').attrs['offset']				#Offset. Also needed to correct the dwd reflectivity to normal dbz values 
 			refl						= h5py_file.get('dataset1/data1/data')								#uncorrected data 
+			time_start					= h5py_file.get('how').attrs['startepochs']							#time at which scan started in epochs (linux time)
+			time_end					= h5py_file.get('how').attrs['endepochs']							#time at which scan ended in epochs (linux time)
+			
 			
 			###save data to RadarData-Object
 			radar_data.lon_site			= lon_site															#longitude coordinates of radar site
@@ -87,6 +91,8 @@ class Dwd(Radar):
 			radar_data.azi_coords		= np.arange(azi_start,azi_steps*azi_rays,azi_steps)					#array containing azimuth coordinates of data points (at near edge of grid box)
 			radar_data.azi_coords_inc	= np.arange(azi_start,azi_steps*azi_rays,azi_steps/res_factor)		#array containing azimuth coordinates of data points with artificially increased resolution
 			radar_data.refl				= refl * gain + offset												#corrected data
+			radar_data.time_start		= datetime.utcfromtimestamp(time_start)								#time at which radar scan started in utc
+			radar_data.time_end			= datetime.utcfromtimestamp(time_end)								#time at which radar scan ended in utc
 			
 			###save RadarData-Object (which contains all the saved data) to DWD-Object
 			self.data 					= radar_data
