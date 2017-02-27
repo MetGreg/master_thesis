@@ -36,22 +36,22 @@ class Dwd(Radar):
 	####################################################################
 	### Initialization - method ###
 	####################################################################
-	def __init__(self):
+	def __init__(self,file_name,res_factor):
 		
 		'''
 		Save name of radar to object
 		'''
 	
-		self.name = 'dwd' #name of radar
-	
-	
+		self.name 		= 'dwd' 		#name of radar
+		self.file_name 	= file_name 	#name of data file
+		self.res_factor	= res_factor 	#factor, by which resolution of the radar data will be increased artificially
 	
 	
 	
 	####################################################################
 	### method to read in dwd-data (hdf5) ###
 	####################################################################
-	def read_file(self,data_file,res_factor):
+	def read_file(self):
 	
 		'''
 		Reads dwd radar. Only attributes needed for my calculations are 
@@ -61,7 +61,7 @@ class Dwd(Radar):
 		'''
 		
 		###open file
-		with h5py.File(data_file,'r') as h5py_file:
+		with h5py.File(self.file_name,'r') as h5py_file:
 			
 			###create RadarData-Object to save radar data generalized to this object	
 			radar_data = RadarData()
@@ -89,7 +89,7 @@ class Dwd(Radar):
 			radar_data.azi_rays			= int(azi_rays)														#number of azimuth rays(360 --> 1° steps)
 			radar_data.range_coords		= np.arange(r_start+r_steps,r_steps*r_bins+r_start+r_steps,r_steps)	#array containing range coordinates of data points (at far edge of grid box)
 			radar_data.azi_coords		= np.arange(azi_start,azi_steps*azi_rays,azi_steps)					#array containing azimuth coordinates of data points (at near edge of grid box)
-			radar_data.azi_coords_inc	= np.arange(azi_start,azi_steps*azi_rays,azi_steps/res_factor)		#array containing azimuth coordinates of data points with artificially increased resolution
+			radar_data.azi_coords_inc	= np.arange(azi_start,azi_steps*azi_rays,azi_steps/self.res_factor)	#array containing azimuth coordinates of data points with artificially increased resolution
 			radar_data.refl				= refl * gain + offset												#corrected data
 			radar_data.time_start		= datetime.utcfromtimestamp(time_start)								#time at which radar scan started in utc
 			radar_data.time_end			= datetime.utcfromtimestamp(time_end)								#time at which radar scan ended in utc

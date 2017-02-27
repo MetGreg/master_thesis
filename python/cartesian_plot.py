@@ -19,10 +19,13 @@ its parameters can be defined in parameters.py.
 ### modules ###
 ########################################################################
 
+'''
+Modules that need to be imported
+'''
+
 ###modules
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.pyplot as plt							
+import numpy as np										
 import re
 import seaborn as sns
 import parameters
@@ -39,20 +42,25 @@ from MasterModule.GridParameter import GridParameter
 	
 					
 ########################################################################
-### parameters ###
+### lists, parameters ###
 ########################################################################
 
 '''
-Some parameters, that can be set in parameters.py
+Some parameters, that can be set in parameters.py.
+Also, lists of program are defined here.
 '''
 
+###parameters
 file_name 	= parameters.file_name	#name of data file
 grid_par 	= parameters.grid_par	#numpy array containing grid parameters (np.array([start_lon,end_lon],[start_lat,end_lat],resolution]))
 refl_key	= parameters.refl_key	#defines at which processing step reflectivity shall be plotted
 minute		= parameters.minute		#defines which minute of the hourly pattern radar data files shall be plotted
 res_factor	= parameters.res_factor	#factor, by which azimuth resolution is going to be increased
+tick_frac	= parameters.tick_frac	#fraction of grid lines, that will be labeled in plot
 
-
+###lists
+x_label 	= []
+y_label		= []
 
 
 
@@ -67,14 +75,14 @@ differs, depending on the radar that shall be plotted.
 
 ###check, data from which radar is used and create a corresponding radar-object
 if re.search('dwd_rad_boo',file_name):
-	radar = Dwd()
+	radar = Dwd(file_name,res_factor)
 elif re.search('level1_hdcp2',file_name):
-	radar = Pattern('dbz',minute)
+	radar = Pattern('dbz',minute,file_name,res_factor)
 elif re.search('level2_hdcp2',file_name):
-	radar = Pattern(refl_key,minute)
+	radar = Pattern(refl_key,minute,file_name,res_factor)
 
 ### read in data
-radar.read_file(file_name,res_factor)
+radar.read_file()
 
 
 
@@ -95,7 +103,7 @@ sub-grid boxes, when the coordinates of the sub grid boxes are adjusted
 (growing with 1/x ° instead of 1°)
 '''
 
-radar.increase_azi_res(res_factor)
+radar.increase_azi_res()
 
 
 
@@ -221,38 +229,32 @@ reflectivity = new_grid.data_to_grid(index_matrix_file,radar)
 Plots radar data on the new cartesian grid using seaborn.
 '''
 
+###calculates lon/lat of each grid cell of the cartesian grid
+lon_plot 	= np.arange(new_grid.par.lon_start,new_grid.par.lon_end,new_grid.par.res_deg)
+lat_plot 	= np.arange(new_grid.par.lat_start,new_grid.par.lat_end,new_grid.par.res_deg)
 
-xlabel = []
-ylabel = []
+###number of grid boxes to be plotted
+ticks 		= int(np.ceil((new_grid.par.lon_end - new_grid.par.lon_start)/new_grid.par.res_deg))
 
-lon_plot = np.arange(new_grid.par.lon_start,new_grid.par.lon_end,new_grid.par.res_deg)
-lat_plot = np.arange(new_grid.par.lat_start,new_grid.par.lat_end,new_grid.par.res_deg)
-
-ticks = int(np.ceil((new_grid.par.lon_end - new_grid.par.lon_start)/new_grid.par.res_deg))
-
-
-for x in range(0,ticks,int(ticks/10)):
-	xlabel.append(round(lon_plot[x],2))
-	ylabel.append(round(lat_plot[x],2))
+###fill label list with lon/lat 
+for x in range(0,ticks,int(ticks/tick_frac)):
+	x_label.append(round(lon_plot[x],2))
+	y_label.append(round(lat_plot[x],2))
 	
 ###change order of lines
 refl_rev = reflectivity[::-1] #matplotlib starts to plot from top, but data is saved from bottom --> need to reverse
 
-
 ###create plot
-fig,ax = plt.subplots()
-sns.heatmap(refl_rev, square=True)
-ax.set_yticks(np.arange(0,ticks,ticks/10), minor = False)
-ax.set_xticklabels(xlabel,fontsize = 16)
-ax.set_yticklabels(ylabel,fontsize = 16)
-ax.set_xticks(np.arange(0,ticks,ticks/10), minor = False)
-ax.yaxis.grid(True, which='major')
-ax.xaxis.grid(True, which='major')
-plt.title(
-	str(radar.name) + '-data: ' + str(radar.data.time_start.time())[0:8] + ' - ' + str(radar.data.time_end.time())[0:8],
-	fontsize = 24
- )
-plt.xlabel('longitude',fontsize = 18)
-plt.ylabel('latitude',fontsize = 18)
-plt.show()
-
+fig,ax 				= plt.subplots() 																														#create subplot																	
+sns.heatmap			(refl_rev, square=True,vmin = -80, vmax = 80)																													#create heatmap
+ax.set_xticks		(np.arange(0,ticks,ticks/tick_frac), minor = False)																						#x-tick positions
+ax.set_yticks		(np.arange(0,ticks,ticks/tick_frac), minor = False)																						#y-tick positions
+ax.set_xticklabels	(x_label,fontsize = 16)																													#x-tick labels
+ax.set_yticklabels	(y_label,fontsize = 16)																													#y-tick labels
+ax.xaxis.grid		(True, which='major')																													#x axis grid
+ax.yaxis.grid		(True, which='major')																													#y axis grid
+plt.xlabel			('longitude',fontsize = 18)																												#label x axis
+plt.ylabel			('latitude'	,fontsize = 18)																												#label y axis
+plt.title			(str(radar.name) + '-data: ' + str(radar.data.time_start.time())[0:8] + ' - ' + str(radar.data.time_end.time())[0:8],fontsize = 24) 	#title
+plt.show()																																					#show
+		

@@ -65,7 +65,7 @@ class Radar(object):
 	####################################################################
 	### method to increase azimuth resolution by a factor ###
 	####################################################################
-	def increase_azi_res(self,res_factor):
+	def increase_azi_res(self):
 		
 		'''
 		Increases azimuth resolution of radar dataset.
@@ -75,8 +75,8 @@ class Radar(object):
 		data_inc_res = []
 		
 		#loop through radar data lines (=azimuths) and fill the new created list with 'res_factor'- number of duplicates of the data line
-		for data_line in self.data.refl:	#loop through data lines (=azimuth angles)
-			for y in range(res_factor):		#append a data line duplicate 'res_factor'-times
+		for data_line in self.data.refl:		#loop through data lines (=azimuth angles)
+			for y in range(self.res_factor):	#append a data line duplicate 'res_factor'-times
 				data_inc_res.append(data_line)
 		
 		###save artificially increased dataset to object

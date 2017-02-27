@@ -32,6 +32,17 @@ grid_par			= [[lon_start,lon_end],[lat_start,lat_end],resolution] 	#grid paramet
 
 
 
+########################################################################
+### dwd radar ###
+########################################################################
+
+'''
+parameters specific for dwd radar data
+'''
+
+file_name_dwd		= './data/dwd_rad_boo/sweeph5allm/2016/06/07/ras07-pcpng01_sweeph5allm_any_00-2016060716003300-boo-10132-hd5'
+res_dwd				= 10		#factor by which the azimuth resolution of dwd data will be increased
+
 
 
 
@@ -44,8 +55,25 @@ grid_par			= [[lon_start,lon_end],[lat_start,lat_end],resolution] 	#grid paramet
 parameters specific for pattern radar data
 '''
 
+#file_name_pattern	= './data/level1_hdcp2/2016/06/m4t_HHG_wrx00_l1_dbz_v00_20160607160000.nc'
+file_name_pattern	= './data/level2_hdcp2/2016/06/m4t_HHG_wrx00_l2_dbz_v00_20160607160000.nc'
 minute				= 1								#pattern data has one file per hour. This parameter defines which minute of the hour shall be plotted. Measurements in 0.5 minute steps (--> first measurement at minute 0.5). This time (minute) refers to time at which radar scan ended. 
 refl_key			= 'dbz_ac2'						#level 2 pattern data has two processing steps. Define here which one shall be plotted. dbz_ac1 = step1, dbz_ac2 = step2
+res_pattern			= 10							#factor by which tze azimuth resolution of pattern data will be increased
+
+
+
+
+
+########################################################################
+### plot ###
+########################################################################
+
+'''
+parameters for plotting
+'''
+
+tick_frac		= 10	#fraction of grid lines, that will be labeled
 
 
 
@@ -59,9 +87,14 @@ refl_key			= 'dbz_ac2'						#level 2 pattern data has two processing steps. Defi
 general paramaters
 '''
 
-res_factor			= 10		#factor by which the azimuth-resolution will be increased
+res_factor			= 10		#factor by which the azimuth-resolution will be increased (general, for all radars)
 
 ###file_names
 file_name 			= './data/dwd_rad_boo/sweeph5allm/2016/06/07/ras07-pcpng01_sweeph5allm_any_00-2016060716003300-boo-10132-hd5'
 #file_name			= './data/level1_hdcp2/2016/06/m4t_HHG_wrx00_l1_dbz_v00_20160607160000.nc'
 #file_name			= './data/level2_hdcp2/2016/06/m4t_HHG_wrx00_l2_dbz_v00_20160607160000.nc'
+
+
+
+
+
