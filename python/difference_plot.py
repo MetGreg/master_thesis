@@ -281,7 +281,7 @@ for x in range(0,ticks,int(ticks/tick_frac)):
 
 ###create plot
 fig,ax 				= plt.subplots() 													#create subplot																	
-sns.heatmap			(refl_diff, square=True,vmin = -80, vmax = 80)						#create heatmap
+sns.heatmap			(refl_diff, square=True,vmin = -70, vmax = 70)						#create heatmap
 ax.set_xticks		(np.arange(0,ticks,ticks/tick_frac), minor = False)					#x-tick positions
 ax.set_yticks		(np.arange(0,ticks,ticks/tick_frac), minor = False)					#y-tick positions
 ax.set_xticklabels	(x_label,fontsize = 16)												#x-tick labels

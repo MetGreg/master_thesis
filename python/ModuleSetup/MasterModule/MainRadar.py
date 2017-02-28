@@ -9,7 +9,7 @@
 ########################################################################
 ### modules ###
 ########################################################################
-import wradlib
+import wradlib.georef
 import cartopy.crs as ccrs
 import numpy as np
 
