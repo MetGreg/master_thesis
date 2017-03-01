@@ -15,7 +15,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-import seaborn as sns
+import seaborn as sb
 import parameters
 from pathlib import Path
 from MasterModule.MainRadar import Radar
@@ -235,10 +235,16 @@ for radar in radars:
 	'''
 	Interpolates radar data to the new cartesian grid, by averaging all
 	data points falling into the same grid box of the new cartesian grid. 
+	Reflectiviy smaller than 5 dbz, will be set to zero, to avoid having 
+	large differences at low reflectivity.
 	'''
 	
 	reflectivity = new_grid.data_to_grid(index_matrix_file,radar)
 	
+	###set reflectivities smaller than 5 to 5
+	reflectivity[reflectivity < 5] = 5
+	
+	###append reflectivities to list after inverting (since matplotlib plots the data exactly inverted)
 	reflectivities.append(reflectivity[::-1])
 	
 
@@ -281,13 +287,14 @@ for x in range(0,ticks,int(ticks/tick_frac)):
 
 ###create plot
 fig,ax 				= plt.subplots() 													#create subplot																	
-sns.heatmap			(refl_diff, square=True,vmin = -70, vmax = 70)						#create heatmap
+sb.heatmap			(refl_diff,vmin = -70, vmax = 70,cmap = 'bwr')						#create heatmap
 ax.set_xticks		(np.arange(0,ticks,ticks/tick_frac), minor = False)					#x-tick positions
 ax.set_yticks		(np.arange(0,ticks,ticks/tick_frac), minor = False)					#y-tick positions
 ax.set_xticklabels	(x_label,fontsize = 16)												#x-tick labels
 ax.set_yticklabels	(y_label,fontsize = 16)												#y-tick labels
-ax.xaxis.grid		(True, which='major')												#x axis grid
-ax.yaxis.grid		(True, which='major')												#y axis grid
+ax.xaxis.grid		(True, which='major',color = 'k')									#x axis grid
+ax.yaxis.grid		(True, which='major',color = 'k')									#y axis grid
+ax.set_axisbelow	(False)																#put grid in front of data
 plt.xlabel			('longitude',fontsize = 18)											#label x axis
 plt.ylabel			('latitude'	,fontsize = 18)											#label y axis
 plt.title			('Difference plot at ' + str(radar.data.time_start),fontsize = 24)	#title

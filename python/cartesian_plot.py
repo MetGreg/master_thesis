@@ -24,10 +24,11 @@ Modules that need to be imported
 '''
 
 ###modules
-import matplotlib.pyplot as plt							
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors						
 import numpy as np										
 import re
-import seaborn as sns
+import seaborn as sb
 import parameters
 from pathlib import Path
 from MasterModule.MainRadar import Radar
@@ -61,6 +62,8 @@ tick_frac	= parameters.tick_frac	#fraction of grid lines, that will be labeled i
 ###lists
 x_label 	= []
 y_label		= []
+
+
 
 
 
@@ -230,11 +233,11 @@ Plots radar data on the new cartesian grid using seaborn.
 '''
 
 ###calculates lon/lat of each grid cell of the cartesian grid
-lon_plot 	= np.arange(new_grid.par.lon_start,new_grid.par.lon_end,new_grid.par.res_deg)
-lat_plot 	= np.arange(new_grid.par.lat_start,new_grid.par.lat_end,new_grid.par.res_deg)
+lon_plot 			= np.arange(new_grid.par.lon_start,new_grid.par.lon_end,new_grid.par.res_deg)
+lat_plot 			= np.arange(new_grid.par.lat_start,new_grid.par.lat_end,new_grid.par.res_deg)
 
 ###number of grid boxes to be plotted
-ticks 		= int(np.ceil((new_grid.par.lon_end - new_grid.par.lon_start)/new_grid.par.res_deg))
+ticks 				= int(np.ceil((new_grid.par.lon_end - new_grid.par.lon_start)/new_grid.par.res_deg))
 
 ###fill label list with lon/lat 
 for x in range(0,ticks,int(ticks/tick_frac)):
@@ -242,17 +245,21 @@ for x in range(0,ticks,int(ticks/tick_frac)):
 	y_label.append(round(lat_plot[x],2))
 	
 ###change order of lines
-refl_rev = reflectivity[::-1] #matplotlib starts to plot from top, but data is saved from bottom --> need to reverse
+refl_rev 			= reflectivity[::-1] #matplotlib starts to plot from top, but data is saved from bottom --> need to reverse
+
+###create colormap for plot																		
+cmap 				= mcolors.LinearSegmentedColormap.from_list('my colormap',['white','blue','red','magenta'])	#continously changing colormap 
 
 ###create plot
 fig,ax 				= plt.subplots() 																														#create subplot																	
-sns.heatmap			(refl_rev, square=True,vmin = -70, vmax = 70)																							#create heatmap
+sb.heatmap			(refl_rev,vmin = 5, vmax = 70, cmap = cmap)																								#create heatmap
 ax.set_xticks		(np.arange(0,ticks,ticks/tick_frac), minor = False)																						#x-tick positions
 ax.set_yticks		(np.arange(0,ticks,ticks/tick_frac), minor = False)																						#y-tick positions
 ax.set_xticklabels	(x_label,fontsize = 16)																													#x-tick labels
 ax.set_yticklabels	(y_label,fontsize = 16)																													#y-tick labels
-ax.xaxis.grid		(True, which='major')																													#x axis grid
-ax.yaxis.grid		(True, which='major')																													#y axis grid
+ax.set_axisbelow	(False)																																	#put grid in front of data																											
+ax.xaxis.grid		(True, which='major',zorder=10,color='k')																								#x axis grid
+ax.yaxis.grid		(True, which='major',zorder=10,color='k')																								#y axis grid
 plt.xlabel			('longitude',fontsize = 18)																												#label x axis
 plt.ylabel			('latitude'	,fontsize = 18)																												#label y axis
 plt.title			(str(radar.name) + '-data: ' + str(radar.data.time_start.time())[0:8] + ' - ' + str(radar.data.time_end.time())[0:8],fontsize = 24) 	#title
