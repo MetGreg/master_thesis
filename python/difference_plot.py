@@ -42,16 +42,16 @@ Also, lists of program are defined here.
 file_name_dwd		= parameters.file_name_dwd		#name of dwd data file
 file_name_pattern 	= parameters.file_name_pattern	#name of pattern data file
 grid_par 			= parameters.grid_par			#numpy array containing grid parameters (np.array([start_lon,end_lon],[start_lat,end_lat],resolution]))
-minute				= parameters.minute				#defines which minute of the hourly pattern radar data files shall be plotted
+minute			= parameters.minute				#defines which minute of the hourly pattern radar data files shall be plotted
 refl_key			= parameters.refl_key			#defines at which processing step reflectivity shall be plotted
-res_dwd				= parameters.res_dwd			#factor, by which azimuth resolution of dwd radar is going to be increased
-res_pattern			= parameters.res_pattern		#factor, by which azimuth resolution of pattern radar is going to be increased
+res_dwd			= parameters.res_dwd			#factor, by which azimuth resolution of dwd radar is going to be increased
+res_pattern		= parameters.res_pattern			#factor, by which azimuth resolution of pattern radar is going to be increased
 tick_frac			= parameters.tick_frac			#fraction of grid lines, that will be labeled in plot
 
 ###lists
-reflectivities 		= []							#Will contain reflectivity matrices of both radars
-x_label				= []							#for labeling x-axis
-y_label				= []							#for labling y-axis
+reflectivities 	= []							#Will contain reflectivity matrices of both radars
+x_label			= []							#for labeling x-axis
+y_label			= []							#for labling y-axis
 
 
 
@@ -68,9 +68,9 @@ For both radars, a radar objective is created
 radar_dwd 			= Dwd(file_name_dwd,res_dwd)
 
 ###pattern data can be of different processing steps --> can be found in file name
-if re.search('level1_hdcp2',file_name_pattern):
+if re.search('level1',file_name_pattern):
 	radar_pattern 	= Pattern('dbz',minute,file_name_pattern,res_pattern)
-elif re.search('level2_hdcp2', file_name_pattern):
+elif re.search('level2', file_name_pattern):
 	radar_pattern	= Pattern(refl_key,minute,file_name_pattern,res_pattern)
 
 ###create list of both radar objectives, for easy loop

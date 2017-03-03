@@ -79,9 +79,9 @@ differs, depending on the radar that shall be plotted.
 ###check, data from which radar is used and create a corresponding radar-object
 if re.search('dwd_rad_boo',file_name):
 	radar = Dwd(file_name,res_factor)
-elif re.search('level1_hdcp2',file_name):
+elif re.search('level1',file_name):
 	radar = Pattern('dbz',minute,file_name,res_factor)
-elif re.search('level2_hdcp2',file_name):
+elif re.search('level2',file_name):
 	radar = Pattern(refl_key,minute,file_name,res_factor)
 
 ### read in data
