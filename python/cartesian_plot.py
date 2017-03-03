@@ -13,7 +13,7 @@ its parameters can be defined in parameters.py.
 
 ###QUESTIONS/to-dos
 #-deal with warnings
-#-improve plot
+
 
 ########################################################################
 ### modules ###
