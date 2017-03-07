@@ -1,0 +1,97 @@
+###parameter file for plotting radar data on a new defined cartesian grid
+
+'''
+In this file, all parameters used to plot radar data on a new defined grid
+can be set.
+'''
+
+
+
+
+
+########################################################################
+### new cartesian grid ###
+########################################################################
+
+'''
+parameters specific for the new defined cartesian grid
+'''
+max_range			= 19966.140625											#maximal range of pattern radar in m
+lon_center		= 0.23101493											#rotated longitude coordinate of central point of grid (= radar site of pattern radar)
+lat_center		= -0.36853593											#rotated latitude coordinate of central point of grid ( = radar site of pattern radar)
+lon_start			= 0.0516949287345										#starting longitude
+lon_end			= 0.410334898692										#ending longitude
+lat_start			= -0.547853479291										#starting latitude
+lat_end			= -0.18922092829										#ending latitude
+resolution		= 250												#resolution of the new cartesian grid in m
+grid_par			= [[lon_start,lon_end],[lat_start,lat_end],
+				[lon_center,lat_center],max_range,resolution] 				#grid parameters in one list			
+
+
+
+
+
+########################################################################
+### dwd radar ###
+########################################################################
+
+'''
+parameters specific for dwd radar data
+'''
+
+file_name_dwd		= '../data/dwd_rad_boo/sweeph5allm/2016/06/07/ras07-pcpng01_sweeph5allm_any_00-2016060716003300-boo-10132-hd5'
+res_dwd			= 10		#factor by which the azimuth resolution of dwd data will be increased
+
+
+
+
+
+########################################################################
+### pattern radar ###
+########################################################################
+
+'''
+parameters specific for pattern radar data
+'''
+
+file_name_pattern	= '../../../pattern/daten/lawr_hdcp2format/HHG/level1/2016/06/m4t_HHG_wrx00_l1_dbz_v00_20160607160000.nc'
+#file_name_pattern	= '../../../pattern/daten/lawr_hdcp2format/HHG/level2/2016/06/m4t_HHG_wrx00_l2_dbz_v00_20160607160000.nc'
+minute			= 1								#pattern data has one file per hour. This parameter defines which minute of the hour shall be plotted. Measurements in 0.5 minute steps (--> first measurement at minute 0.5). This time (minute) refers to time at which radar scan ended. 
+refl_key			= 'dbz_ac1'						#level 2 pattern data has two processing steps. Define here which one shall be plotted. dbz_ac1 = step1, dbz_ac2 = step2
+res_pattern		= 10								#factor by which tze azimuth resolution of pattern data will be increased
+
+
+
+
+
+########################################################################
+### plot ###
+########################################################################
+
+'''
+parameters for plotting
+'''
+
+tick_frac		= 10	#fraction of grid lines, that will be labeled
+
+
+
+
+
+########################################################################
+### general ###
+########################################################################
+
+'''
+general paramaters
+'''
+
+res_factor			= 10		#factor by which the azimuth-resolution will be increased (general, for all radars)
+
+###file_names
+file_name 			= file_name_dwd
+
+
+
+
+
