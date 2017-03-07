@@ -102,9 +102,9 @@ class Radar(object):
 		
 		###calculating arrays of middle pixel coordinates
 		range_coords 		= np.append(range_coords, range_coords[-1] + (range_coords[-1]-range_coords[-2])) 	#append a new value to the list (which will be used to average the last value)
-		range_coords 		= range_coords[:-1] - (range_coords[1:]-range_coords[:-1])/2.						#average all entries by changing one entry after another using two consecutive entries to average.
-		azi_coords 			= np.append(azi_coords, azi_coords[-1] + (azi_coords[-1]-azi_coords[-2]))			#append a new value to the list (which is used to average the last value)
-		azi_coords 			= azi_coords[:-1] + (azi_coords[1:]-azi_coords[:-1])/2.								#average all entries by changing one entry after another using two consecutive entries to average.
+		range_coords 		= range_coords[:-1] - (range_coords[1:]-range_coords[:-1])/2.					#average all entries by changing one entry after another using two consecutive entries to average.
+		azi_coords 		= np.append(azi_coords, azi_coords[-1] + (azi_coords[-1]-azi_coords[-2]))			#append a new value to the list (which is used to average the last value)
+		azi_coords 		= azi_coords[:-1] + (azi_coords[1:]-azi_coords[:-1])/2.						#average all entries by changing one entry after another using two consecutive entries to average.
 		
 		###create a numpy meshgrid, to have easy access to all combinations of range and azimuth
 		pixel_center 		= np.meshgrid(range_coords, azi_coords)
@@ -127,7 +127,7 @@ class Radar(object):
 		'''
 		
 		###transform polar coordinates to lon/lat coordinates
-		lon, lat 		= wradlib.georef.polar2lonlat(polar_range,polar_azi,(self.data.lon_site,self.data.lat_site),re=6370040) #lon.shape and lat.shape = (360,600) = (azimuth,range)
+		lon, lat 			= wradlib.georef.polar2lonlat(polar_range,polar_azi,(self.data.lon_site,self.data.lat_site),re=6370040) #lon.shape and lat.shape = (360,600) = (azimuth,range)
 
 		return lon, lat
 
@@ -147,13 +147,13 @@ class Radar(object):
 		'''		
 		
 		###coordinates of rotated pole
-		rotated_pole 	= [-170.415, 36.0625]
+		rotated_pole 		= [-170.415, 36.0625]
 	
 		###calculate coordinates in rotated pole coordinate system
 		proj 			= ccrs.RotatedPole(rotated_pole[0], rotated_pole[1])
 		rotated_coords 	= proj.transform_points(ccrs.Geodetic(), lon, lat)
 		
-		self.data.lon_rota = rotated_coords[:,:,0]
-		self.data.lat_rota = rotated_coords[:,:,1]
+		return rotated_coords
+		
 		
 	

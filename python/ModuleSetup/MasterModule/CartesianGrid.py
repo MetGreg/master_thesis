@@ -33,9 +33,9 @@ class CartesianGrid:
 	
 	
 	
-	####################################################################
+	###################################################################
 	### Initialization method ###
-	####################################################################
+	###################################################################
 	def __init__(self,grid_par,radar):
 		
 		'''
@@ -43,35 +43,29 @@ class CartesianGrid:
 		'''
 		
 		###create gridParameter object, which has defined grid parameters
-		grid = GridParameter()
+		grid 		= GridParameter()
 		
 		###read the grid definition
-		lon_start 		= grid_par[0][0]									#starting longitude
-		lon_end			= grid_par[0][1]									#ending longitude
-		lat_start 		= grid_par[1][0]									#starting latitude
-		lat_end			= grid_par[1][1]									#ending latitude
-		resolution		= float(grid_par[2])								#grid resolution in m
+		lon_start 	= grid_par[0][0]								#starting longitude
+		lon_end		= grid_par[0][1]								#ending longitude
+		lat_start 	= grid_par[1][0]								#starting latitude
+		lat_end		= grid_par[1][1]								#ending latitude
+		center		= grid_par[2]									#rotated coords of center of grid (=site coords of pattern radar)
+		max_range		= grid_par[3]									#maximum range of pattern radar in m
+		resolution	= float(grid_par[4])							#grid resolution in m
 		
-		###If lon/lat_start/end is min/max, whole data shall be plotted and min/max lon/lat must be calculated
-		if lon_start == 'min':
-			lon_start = min(np.reshape(radar.data.lon_rota,radar.data.azi_rays*radar.data.r_bins*res_factor))
-		if lon_end == 'max':
-			lon_end = max(np.reshape(radar.data.lon_rota,radar.data.azi_rays*radar.data.r_bins*res_factor))
-		if lat_start == 'min':
-			lat_start = min(np.reshape(radar.data.lat_rota,radar.data.azi_rays*radar.data.r_bins*res_factor))
-		if lat_end == 'max':
-			lat_end = max(np.reshape(radar.data.lat_rota,radar.data.azi_rays*radar.data.r_bins*res_factor))
-	
 		###save grid definition to gridParameter-object
-		grid.lon_start 	= lon_start											#starting longitude
-		grid.lon_end 	= lon_end											#ending longitude
-		grid.lat_start 	= lat_start											#starting latitude
-		grid.lat_end 	= lat_end											#ending latitude
-		grid.res_m		= resolution										#resolution in m
-		grid.res_deg	= 1/(60*1852/resolution) 							#resolution in ° --> 1° equals 60 NM, equals 60*1852 m. --> 250m equals 1°/(60*1852/250)
+		grid.lon_start = lon_start									#starting longitude
+		grid.lon_end 	= lon_end										#ending longitude
+		grid.lat_start = lat_start									#starting latitude
+		grid.lat_end 	= lat_end										#ending latitude
+		grid.center	= center										#rotated coords of center of grid
+		grid.max_range	= max_range									#maximum range of pattern radar in m
+		grid.res_m	= resolution									#resolution in m
+		grid.res_deg	= 1/(60*1852/resolution) 						#resolution in ° --> 1° equals 60 NM, equals 60*1852 m. --> 250m equals 1°/(60*1852/250)
 		grid.lon_dim	= int(np.ceil((lon_end - lon_start)/grid.res_deg))	#number of rows in cartesian grid-matrix
 		grid.lat_dim	= int(np.ceil((lat_end - lat_start)/grid.res_deg)) 	#number of lines in cartesian grid-matrix
-	
+		
 		###save grid parameter object to CartesianGrid-object
 		self.par 		= grid
 	
@@ -96,7 +90,7 @@ class CartesianGrid:
 		lat_index 	= np.floor((radar.data.lat_rota - self.par.lat_start)/self.par.res_deg)		
 			
 		###create empty matrix with shape of (lat_dim, lon_dim) which is (number of lines, number of rows) of new cartesian grid.
-		index_matrix = np.empty((self.par.lat_dim,self.par.lon_dim), dtype=np.object_)
+		index_matrix 	= np.empty((self.par.lat_dim,self.par.lon_dim), dtype=np.object_)
 	
 		###fill empty matrix with empty lists, to be able to save more than one location, in case more than one radar data point falls into the same grid box
 		for line_nr in range(len(index_matrix)):																					#lines of index-matrix (latitudes)
@@ -105,10 +99,14 @@ class CartesianGrid:
 		
 		###loop through all radar data points and write the location (location = index in array of polar coordinates) of data points, which are not outside of new grid boundaries to the corresponding list of the index-matrix. 		
 		for azi_nr in range(len(lon_index)):																						#lines of lon/lat_index (azimuth angles)
-			for range_nr in range(len(lon_index[azi_nr])): 																			#rows of lon/lat_index (ranges)
-				if (lat_index[azi_nr][range_nr] <= self.par.lat_dim -1  and lat_index[azi_nr][range_nr] >= 0): 							#check, if data point is north or east of grid boundary 
-					if (lon_index[azi_nr][range_nr] <= self.par.lon_dim -1 and lon_index[azi_nr][range_nr] >= 0): 						#check, if data point is south or west of grid boundary
-						index_matrix[int(lat_index[azi_nr][range_nr])][int(lon_index[azi_nr][range_nr])].append([azi_nr,range_nr]) 	#append grid box of new cartesian grid (=entry of index-matrix), in which the radar data point falls, with location of radar data point. 
+			for range_nr in range(len(lon_index[azi_nr])): 
+				
+				###get distance between data point and grid center
+				distance = self.get_distance(radar,azi_nr,range_nr)
+				
+				###check, if distance is within maximum range to be plotted
+				if distance <= self.par.max_range:
+					index_matrix[int(lat_index[azi_nr][range_nr])][int(lon_index[azi_nr][range_nr])].append([azi_nr,range_nr]) 	#append grid box of new cartesian grid (=entry of index-matrix), in which the radar data point falls, with location of radar data point. 
 				
 		###save matrix to dat.file
 		index_matrix.dump(index_matrix_file)
@@ -161,4 +159,28 @@ class CartesianGrid:
 	
 	
 	
+	###################################################################
+	### Distance of data point to center of grid ###
+	###################################################################
+	def get_distance(self,radar,azi_nr,range_nr):
 		
+		'''
+		Calculates distance of a data point to the center of grid.
+		'''
+		
+		###get lat/lon coordinates of data point
+		lon 			= radar.data.lon_rota[azi_nr][range_nr]
+		lat 			= radar.data.lat_rota[azi_nr][range_nr]
+		
+		###get difference of coordinates in °
+		lon_diff 		= lon - self.par.center[0]
+		lat_diff 		= lat - self.par.center[1]
+		
+		###get difference in m
+		lon_diff_m 	= lon_diff*60*1852
+		lat_diff_m 	= lat_diff*60*1852
+		
+		###get distance in m
+		distance 		= np.sqrt(lon_diff_m**2 + lat_diff_m**2)
+		
+		return distance

@@ -2,7 +2,8 @@
 
 '''
 Radar data of pattern or dwd radar will be plotted on a cartesian grid, 
-its parameters can be defined in parameters.py. 
+its parameters can be defined in parameters.py. The plot will exactly 
+cover the pattern area.
 
 1. step: Read in radar data.
 2. step: Transform polar coordinates of radar data points to lon/lat
@@ -52,16 +53,16 @@ Also, lists of program are defined here.
 '''
 
 ###parameters
-file_name 	= parameters.file_name	#name of data file
+file_name = parameters.file_name	#name of data file
 grid_par 	= parameters.grid_par	#numpy array containing grid parameters (np.array([start_lon,end_lon],[start_lat,end_lat],resolution]))
 refl_key	= parameters.refl_key	#defines at which processing step reflectivity shall be plotted
-minute		= parameters.minute		#defines which minute of the hourly pattern radar data files shall be plotted
-res_factor	= parameters.res_factor	#factor, by which azimuth resolution is going to be increased
+minute	= parameters.minute		#defines which minute of the hourly pattern radar data files shall be plotted
+res_factor= parameters.res_factor	#factor, by which azimuth resolution is going to be increased
 tick_frac	= parameters.tick_frac	#fraction of grid lines, that will be labeled in plot
 
 ###lists
 x_label 	= []
-y_label		= []
+y_label	= []
 
 
 
@@ -161,7 +162,10 @@ a function from Claire Merker.
 
 rotated_coords = radar.rotate_pole(lon,lat) #rotated_coords.shape=(360,600,3), (azi,range,[lon,lat,height])
 
-
+###save rotated coords to radar object
+radar.data.lon_rota = rotated_coords[:,:,0]
+radar.data.lat_rota = rotated_coords[:,:,1]
+		
 
 
 
@@ -237,7 +241,7 @@ lon_plot 			= np.arange(new_grid.par.lon_start,new_grid.par.lon_end,new_grid.par
 lat_plot 			= np.arange(new_grid.par.lat_start,new_grid.par.lat_end,new_grid.par.res_deg)
 
 ###number of grid boxes to be plotted
-ticks 				= int(np.ceil((new_grid.par.lon_end - new_grid.par.lon_start)/new_grid.par.res_deg))
+ticks 			= int(np.ceil((new_grid.par.lon_end - new_grid.par.lon_start)/new_grid.par.res_deg))
 
 ###fill label list with lon/lat 
 for x in range(0,ticks,int(ticks/tick_frac)):
@@ -248,11 +252,11 @@ for x in range(0,ticks,int(ticks/tick_frac)):
 refl_rev 			= reflectivity[::-1] #matplotlib starts to plot from top, but data is saved from bottom --> need to reverse
 
 ###create colormap for plot																		
-cmap 				= mcolors.LinearSegmentedColormap.from_list('my colormap',['white','blue','red','magenta'])	#continously changing colormap 
+cmap 			= mcolors.LinearSegmentedColormap.from_list('my colormap',['white','blue','red','magenta'])	#continously changing colormap 
 
 ###create plot
-fig,ax 				= plt.subplots() 																														#create subplot																	
-sb.heatmap			(refl_rev,vmin = 5, vmax = 70, cmap = cmap)																								#create heatmap
+fig,ax 			= plt.subplots() 																														#create subplot																	
+sb.heatmap		(refl_rev,vmin = 5, vmax = 70, cmap = cmap)																								#create heatmap
 ax.set_xticks		(np.arange(0,ticks,ticks/tick_frac), minor = False)																						#x-tick positions
 ax.set_yticks		(np.arange(0,ticks,ticks/tick_frac), minor = False)																						#y-tick positions
 ax.set_xticklabels	(x_label,fontsize = 16)																													#x-tick labels
@@ -260,8 +264,8 @@ ax.set_yticklabels	(y_label,fontsize = 16)																													#y-tick l
 ax.set_axisbelow	(False)																																	#put grid in front of data																											
 ax.xaxis.grid		(True, which='major',zorder=10,color='k')																								#x axis grid
 ax.yaxis.grid		(True, which='major',zorder=10,color='k')																								#y axis grid
-plt.xlabel			('longitude',fontsize = 18)																												#label x axis
-plt.ylabel			('latitude'	,fontsize = 18)																												#label y axis
+plt.xlabel		('longitude',fontsize = 18)																												#label x axis
+plt.ylabel		('latitude'	,fontsize = 18)																												#label y axis
 plt.title			(str(radar.name) + '-data: ' + str(radar.data.time_start.time())[0:8] + ' - ' + str(radar.data.time_end.time())[0:8],fontsize = 24) 	#title
 plt.show()																																					#show
 		

@@ -218,3 +218,50 @@ class GridParameter:
 		
 		
 	
+
+	###################################################################
+	### rotated coordinates of grid center ###
+	###################################################################
+	@property
+	def center(self):
+		
+		'''
+		Rotated coordinates of center of grid. Must be list with
+		two entries.
+		'''
+		
+		try:
+			return self._center
+		except AttributeError:
+			return 0
+	
+	@center.setter
+	def center(self,new_center):
+		assert isinstance(new_center, list), 'new_center is not a list'
+		assert len(new_center) == 2, 'new_center has not the length of 2'
+		self._center = new_center
+		
+	
+	
+	
+	
+	###################################################################
+	### maximum range to be interpolated to grid ###
+	###################################################################
+	@property
+	def max_range(self):
+		
+		'''
+		Maximum range to center of grid, that will be plotted. Must be
+		float.
+		'''
+		
+		try:
+			return self._max_range
+		except AttributeError:
+			return 0
+			
+	@max_range.setter
+	def max_range(self,new_max_range):
+		assert isinstance(new_max_range, float), 'new_max_range is not a float'
+		self._max_range = new_max_range
