@@ -63,7 +63,8 @@ class RadarData:
 			
 	@lon_site.setter
 	def lon_site(self, new_lon_site):
-		assert isinstance(new_lon_site, float), 'new site_longitude not a float'
+		assert isinstance(new_lon_site, float),\
+                'new_lon_site not a float'
 		self._lon_site = new_lon_site
 	
 	
@@ -88,7 +89,8 @@ class RadarData:
 			
 	@lat_site.setter
 	def lat_site(self, new_lat_site):
-		assert isinstance(new_lat_site, float), 'new site_latitude not a float'
+		assert isinstance(new_lat_site, float),\
+                 'new site_latitude not a float'
 		self._lat_site = new_lat_site
 	
 	
@@ -138,7 +140,8 @@ class RadarData:
 			
 	@azi_rays.setter
 	def azi_rays(self, new_azi_rays):
-		assert isinstance(new_azi_rays, int), 'new azi_rays not an integer' 
+		assert isinstance(new_azi_rays, int),\
+                'new azi_rays not an integer' 
 		self._azi_rays = new_azi_rays
 		
 	
@@ -164,8 +167,10 @@ class RadarData:
 			
 	@range_coords.setter
 	def range_coords(self, new_range_coords):
-		assert isinstance(new_range_coords, np.ndarray), 'new range_coords not a numpy array' 
-		assert len(new_range_coords.shape) == 1, 'new range_coords is not 1D'
+		assert isinstance(new_range_coords, np.ndarray),\
+                'new range_coords not a numpy array' 
+		assert len(new_range_coords.shape) == 1,\
+                'new range_coords is not 1D'
 		self._range_coords = new_range_coords
 	
 	
@@ -188,8 +193,10 @@ class RadarData:
 			
 	@azi_coords.setter
 	def azi_coords(self, new_azi_coords):
-		assert isinstance(new_azi_coords, np.ndarray), 'new azi_coords not a numpy array' 
-		assert len(new_azi_coords.shape) == 1, 'new azi_coords is not 1D'
+		assert isinstance(new_azi_coords, np.ndarray),\
+                'new azi_coords not a numpy array' 
+		assert len(new_azi_coords.shape) == 1,\
+                'new azi_coords is not 1D'
 		self._azi_coords = new_azi_coords
 	
 	
@@ -215,8 +222,10 @@ class RadarData:
 		
 	@azi_coords_inc.setter
 	def azi_coords_inc(self, new_azi_coords_inc):
-		assert isinstance(new_azi_coords_inc, np.ndarray), 'new azi_coords_inc not a numpy array' 
-		assert len(new_azi_coords_inc.shape) == 1, 'new azi_coords_inc is not 1D'
+		assert isinstance(new_azi_coords_inc, np.ndarray),\
+                'new azi_coords_inc not a numpy array' 
+		assert len(new_azi_coords_inc.shape) == 1,\
+                'new azi_coords_inc is not 1D'
 		self._azi_coords_inc = new_azi_coords_inc
 	
 	
@@ -242,8 +251,10 @@ class RadarData:
 			
 	@lon_rota.setter
 	def lon_rota(self, new_lon_rota):
-		assert isinstance(new_lon_rota, np.ndarray), 'new lon_rota is no numpy array'
-		assert len(new_lon_rota.shape) == 2, 'new lon_rota is not 2-dimensional'
+		assert isinstance(new_lon_rota, np.ndarray),\
+                'new lon_rota is no numpy array'
+		assert len(new_lon_rota.shape) == 2,\
+                'new lon_rota is not 2-dimensional'
 		self._lon_rota = new_lon_rota
 		
 	
@@ -270,8 +281,10 @@ class RadarData:
 			
 	@lat_rota.setter
 	def lat_rota(self, new_lat_rota):
-		assert isinstance(new_lat_rota, np.ndarray), 'new lat_rota is no numpy array'
-		assert len(new_lat_rota.shape) == 2, 'new lat_rota is not 2-dimensional'
+		assert isinstance(new_lat_rota, np.ndarray),\
+                'new lat_rota is no numpy array'
+		assert len(new_lat_rota.shape) == 2,\
+                'new lat_rota is not 2-dimensional'
 		self._lat_rota = new_lat_rota
 		
 		
@@ -296,8 +309,10 @@ class RadarData:
 			
 	@refl.setter
 	def refl(self, new_refl):
-		assert isinstance(new_refl, np.ndarray), 'new refl is no numpy array'
-		assert len(new_refl.shape) == 2, 'new refl is not 2-dimensional'
+		assert isinstance(new_refl, np.ndarray),\
+                'new refl is no numpy array'
+		assert len(new_refl.shape) == 2,\
+                'new refl is not 2-dimensional'
 		self._refl = new_refl
 
 
@@ -323,8 +338,10 @@ class RadarData:
 			
 	@refl_inc.setter
 	def refl_inc(self, new_refl_inc):
-		assert isinstance(new_refl_inc, np.ndarray), 'new refl_inc is no numpy array'
-		assert len(new_refl_inc.shape) == 2, 'new refl_inc is not 2-dimensional'
+		assert isinstance(new_refl_inc, np.ndarray),\
+                'new refl_inc is no numpy array'
+		assert len(new_refl_inc.shape) == 2,\
+                'new refl_inc is not 2-dimensional'
 		self._refl_inc = new_refl_inc
 
 
@@ -349,7 +366,8 @@ class RadarData:
 			
 	@time_start.setter
 	def time_start(self, new_time_start):
-		assert isinstance(new_time_start, datetime), 'new time_start is no datetime object'
+		assert isinstance(new_time_start, datetime),\
+                'new time_start is no datetime object'
 		self._time_start = new_time_start
 
 
@@ -374,5 +392,6 @@ class RadarData:
 			
 	@time_end.setter
 	def time_end(self, new_time_end):
-		assert isinstance(new_time_end, datetime), 'new time_start is no datetime object'
+		assert isinstance(new_time_end, datetime),\
+                'new time_start is no datetime object'
 		self._time_end = new_time_end
