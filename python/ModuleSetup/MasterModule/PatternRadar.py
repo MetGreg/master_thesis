@@ -38,7 +38,7 @@ class Pattern(Radar):
     def __init__(self,proc_key,minute,file_name,res_fac):
         
         '''
-        Saves name of radar refl_key to object, which defines at which 
+        Saves name of radar proc_key to object, which defines at which 
         processing step the reflectivity data will be plottet. 
         proc_key must be set in parameters.
         '''
@@ -107,17 +107,17 @@ class Pattern(Radar):
         #array of measured reflectivity                                        
         refl                      = nc.variables          \
                                         [self.proc_key][:]\
-                                        [int((self.minute - 0.5)*2)] 
+                                        [int(self.minute*2)] 
        
         #time in epoch (linux time) at which radar scan started
         time_start                = nc.variables     \
                                         ['time_bnds']\
-                                        [int((self.minute - 0.5)*2)][0]
-            
+                                        [int(self.minute*2)][0]
+  
         #time in epoch (linux time) at which radar scan ended
         time_end                  = nc.variables     \
                                         ['time_bnds']\
-                                        [int((self.minute - 0.5)*2)][1]            
+                                        [int(self.minute*2)][1]            
         
 
 

@@ -52,12 +52,15 @@ parameters specific for the first radar
 '''
 
 #datafile of first radar
-file1     = '../data/dwd_rad_boo/sweeph5allm/2016/06/07/'\
-		  +'ras07-pcpng01_sweeph5allm_any_00-'\
-		  +'2016060716003300-boo-10132-hd5'
+#file1     = '../data/dwd_rad_boo/sweeph5allm/2016/06/07/'\
+#		  +'ras07-pcpng01_sweeph5allm_any_00-'\
+#		  +'2016060716003300-boo-10132-hd5'
+file1     = '../data/dwd_rad_boo/sweeph5allm/2015/07/29/ras07-pcpng01_sweeph5allm_any_00-2015072910203400-boo-10132-hd5'
+#file1     = '../../../pattern/daten/lawr_hdcp2format/HHG/level2/'\
+#            +'2016/06/m4t_HHG_wrx00_l2_dbz_v00_20160607160000.nc'
 
 #minute of hourly files, that shall be plotted (only concerns pattern)
-minute1   = 1                                
+minute1   = 0.5                                
 
 #key of proc. step to be plotted. Only concerns pattern.
 #dbz_ac1 = step1, dbz_ac2 = step2
@@ -82,18 +85,19 @@ parameters specific for the second radar
 '''
 
 #data file of 2nd radar
-file2     = '../../../pattern/daten/lawr_hdcp2format/HHG/level2/'\
-            +'2016/06/m4t_HHG_wrx00_l2_dbz_v00_20160607160000.nc'
+file2     = '/scratch/uni/m4t/u300639/master_thesis/data/pattern/lawr/HHG/level2/2015/07/m4t_HHG_wrx00_l2_dbz_v00_20160729100000.nc'
+#file2     = '../../../pattern/daten/lawr_hdcp2format/HHG/level2/'\
+           # +'2016/06/m4t_HHG_wrx00_l2_dbz_v00_20160607160000.nc'
   
 #minute of hourly files, that shall be plotted (only concerns pattern).
-minute2   = 1.5       
+minute2   = 20       
 
 #key of proc. step to be plotted. Only concerns pattern.
 #dbz_ac1 = step1, dbz_ac2 = step2
 proc_key2 = 'dbz_ac1' 
 
 #factor by which the azi. res. of 2nd radar data will be increased
-res_fac2  = 10         
+res_fac2  = 10        
 
 #merge all 2nd radar parameters to one list
 radar2    = [file2,minute2,proc_key2,res_fac2]

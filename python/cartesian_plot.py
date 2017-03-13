@@ -107,12 +107,7 @@ radar.read_file()
 '''
 The azimuth resolution of the radar usually is 1°. To avoid 
 empty grid boxes in the new cartesian grid, the azimuth 
-resolution can be increased artificially. Each gridbox will 
-be divided into 'x' gridboxes with the same value (x beeing the 
-res_fac). This is done by duplicating all lines (azimuths) 'x'-times. 
-This is equivalent to dividing all grid boxes at this azimuth into 'x' 
-sub-grid boxes, when the coordinates of the sub grid boxes are adjusted 
-(growing with 1/x ° instead of 1°)
+resolution is increased artificially. 
 '''
 
 #artificially increase azimuth resolution
@@ -128,15 +123,10 @@ radar.increase_azi_res()
 
 '''
 Coordinates of data are given at specific points, but are
-valid for a box. The coordinates of the data points are given
-at the far edge in range and near edge in azimuth for each
-grid box (looking from radar site).
+valid for a box. 
 This method calculates for each grid box the polar coordinates 
 of the middle pixel out of the given coordinates at the edge of
 the box.
-The middle pixel is calculated through averaging of two 
-consecutive ranges and through averaging of two consecutive 
-azimuth angles.
 '''
   
 #pixel_center is a np.meshgrid 
@@ -190,13 +180,51 @@ radar.data.lat_rota = coords_rot[:,:,1]
 Creates the cartesian grid, on which data shall be plotted.
 '''
 
+
 #CartesianGrid-object
 car_grid = CartesianGrid(grid_par) 
 
 
 
 
-    
+
+########################################################################
+### Check/Create index-matrix ###
+########################################################################
+
+
+'''
+Radar data in rotated pole coordinates will be interpolated to the
+cartesian grid, by averaging the reflectivity values of all data
+points falling into the same grid box. For a given cartesian grid
+and a given radar, always the same data points fall into the same
+grid boxes. --> This information doesn't need to be calculated each 
+time, but can be saved to a dat.file. 
+--> Check, if such a file is present already for the current radar
+and cartesian grid. If not, call method to create it.
+'''
+
+#the name of the file
+index_matrix_file =  './index_matrix/index_matrix_'     \
+                        +str(radar.name)+'_'            \
+                        +str(car_grid.par.lon_start)+'_'\
+                        +str(car_grid.par.lon_end)+'_'  \
+                        +str(car_grid.par.lat_start)+'_'\
+                        +str(car_grid.par.lat_end)+'_'  \
+                        +str(car_grid.par.res_m)+'_'    \
+                        +str(radar.res_fac)+'.dat'
+
+#Path is used to check, if the file exists
+index_matrix = Path(index_matrix_file)
+
+#if file doesn't exist, create it
+if not index_matrix.is_file():
+    car_grid.create_index_matrix(radar,index_matrix_file)
+
+
+
+
+
 ########################################################################
 ### Interpolate radar data to cartesian grid ###
 ########################################################################
@@ -210,9 +238,9 @@ be set to 5, to avoid large differences at low reflectivity.
 '''
 
 #interpolate radar data to cartesian grid
-refl           = car_grid.data2grid(radar)
- 
-#set reflectivities smaller than 5 to 5
+refl           = car_grid.data2grid(index_matrix_file,radar)
+
+#set reflectivities smaller than 5 to 5)
 refl[refl < 5] = 5
 
 #mirror columns --> matplotlib plots the data exactly mirrored

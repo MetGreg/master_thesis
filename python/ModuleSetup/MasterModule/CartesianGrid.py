@@ -103,117 +103,156 @@ class CartesianGrid:
         #save grid parameter object to CartesianGrid-object
         self.par       = grid
     
-    
-    
-    
-    
+
+
+
+
     ####################################################################
-    ### Interpolate data to grid ###
+    ### Create index-matrix ###
     ####################################################################
-    def data2grid(self,radar):
+    def create_index_matrix(self,radar,index_matrix_file):
         
         '''
-        Radar data will be interpolated to cartesian grid, by averaging
-        all the data, that falls into the same cartesian grid box.
-        This is done by the following steps:
-        1. For all radar data points (in rotated coordinates), calculate
-            the indices of the cartesian grid boxes, in which the data 
-            points would fall.
-        2. Create 2 numpy arrays (filled with zeros) with exactly the 
-            same shape as the cartesian grid. (One entry for each 
-            cartesian grid box).
-            1st numpy array = refl_matrix 
-            2nd numpy array = count_matrix 
-        3. Loop through radar data. For each data point, the index of 
-            the corresponding cartesian grid box was calculated in 
-            step 1. 
-            --> add the reflectivity value of the data point to the 
-            corresponding entry of the refl_matrix.
-            --> add one to the corresponding entry of the count matrix.
-        4. To obtain the average reflectivity for each grid box,
-            divide the refl_matrix by the count_matrix.
-        Only data points in range of pattern radar will be considered.
-        This will be tested by calculating the distance of each data 
-        point to the pattern radar site (in step 3).
+        Method to create and save index-matrix. This is an array, that
+        has exactly the shape of the cartesian grid. It has an entry
+        for each grid box. This entry will be a list, which has an entry
+        for each radar data point falling into the corresponding grid
+        box. This list entry will then be the location (index) of the 
+        data point in the radar data array.        
         '''
         
-        #calculate lon-indices of cart. grid boxes, for radar data array
+        #can take a while (depending on resolution)
+        print('No Index-Matrix present yet. Calculating the matrix...')
+
+        #calculate lon-indices of cart. grid boxes for radar data array
         lon_index = np.floor(
-                        (radar.data.lon_rota-self.par.lon_start)\
+                        (radar.data.lon_rota - self.par.lon_start)\
                         /self.par.res_deg
                         )
 
-        #calculate lat-indices of cart. grid boxes, for radar data array
-        lat_index = np.floor(
-                        (radar.data.lat_rota-self.par.lat_start)\
+        #calculate lat-indices of cart. grid boxes for radar data array
+        lat_index 	= np.floor(
+                        (radar.data.lat_rota - self.par.lat_start)\
                         /self.par.res_deg
-                        )        
-            
-        #create array with shape of cartesian grid for refl values
-        a_refl      = np.zeros(
+                        )
+        
+        #create empty array with shape of cart. grid 
+        a_index 	= np.empty(
                         (self.par.lat_dim,self.par.lon_dim),
+                        dtype=np.object_
                         )
 
-        #create array with shape of cartesian grid to count data points
-        a_count     = np.zeros(
-                        (self.par.lat_dim,self.par.lon_dim)
-                        )        
+        #fill empty index array with empty lists
+        for line_nr in range(len(a_index)):
+            for row_nr in range(len(a_index[line_nr])):
+                a_index[line_nr][row_nr] = []
 
-        #loop through radar data (looping with indices)
-        for azi_nr in range(len(radar.data.refl_inc)):                                                                                        
-            for range_nr in range(len(radar.data.refl_inc[azi_nr])): 
-                
+        #loop through all radar data points and save their location	
+        for azi_nr in range(len(lon_index)):
+            for range_nr in range(len(lon_index[azi_nr])):
+
                 #get distance between data point and grid center
                 distance = self.get_distance(radar,azi_nr,range_nr)
-                
-                #check, if data point is within pattern radar area
+
+                #check, if distance is within max range to be plotted
                 if distance <= self.par.max_range:
-                    
-                    #add the refl value to correct entry of refl_array
-                    a_refl[int(lat_index[azi_nr][range_nr])]  \
-                            [int(lon_index[azi_nr][range_nr])]\
-                            += radar.data.refl_inc[azi_nr][range_nr]     
-                    
-                    #add one to the correct entry of count_array
-                    a_count[int(lat_index[azi_nr][range_nr])] \
-                            [int(lon_index[azi_nr][range_nr])]\
-                            += 1
+
+                    #append loc. of data point to index array entry
+                    a_index[int(lat_index[azi_nr][range_nr])]\
+                                [int(lon_index[azi_nr][range_nr])]\
+                                .append([azi_nr,range_nr]) 	
         
-        #to avoid dividing by zero, set all zeros to np.NaNs
-        a_count[a_count == 0 ] = np.NaN
-        
-        #calculate average reflectivities
-        refl_avg = a_refl/a_count
-        
-        #return interpolated reflectivity array
-        return refl_avg
-    
+        #save index array to .dat file
+        a_index.dump(index_matrix_file)
+
     
 
 
-   
-    ###################################################################
-    ### Distance of data point to center of grid ###
-    ###################################################################
+    
+    ####################################################################
+    ### Interpolation method ###
+    ####################################################################
+    def data2grid(self,index_matrix_file,radar):
+
+        '''
+        Interpolates radar data to new cartesian grid. The reflectivity
+        value of an interpolated grid box is the mean reflectivity of 
+        all data points falling into this grid box.
+        Interpolated value for a grid box is calculating by looping 
+        through the index-matrix. The index-matrix has an entry for each
+        grid box, containing the indices in the radar data array of the
+        data points falling into this grid box. --> Sum reflectivity 
+        values of all data points in the grid box and divide it by the
+        amount of data points falling into this grid box to obtain
+        the averaged (interpolated) reflectivity.
+        '''
+
+        #load the index-matrix
+        a_index = np.load(index_matrix_file)
+
+        #array with shape of cart. grid for saving interpolated data
+        refl = np.empty((self.par.lat_dim,self.par.lon_dim))
+	
+        #loop through index matrix
+        for line_nr in range(self.par.lat_dim):
+            for row_nr in range(self.par.lon_dim):
+                
+                #set reflectivity sum to zero for each grid box
+                refl_sum = 0
+                
+                #loop through all data points of the current grid box
+                for data_point in a_index[line_nr][row_nr]:
+                    
+                    #add the refl. value to the sum variable
+                    refl_sum += radar.data.refl_inc\
+                                    [data_point[0]][data_point[1]]
+                
+                #get amount of data pts falling into the grid box
+                data_count = len(a_index[line_nr][row_nr])
+                
+                #avoid division by zero
+                if data_count == 0:
+                    refl[line_nr][row_nr] = np.NaN
+                
+                #calculate and save average reflectivity
+                else:
+                    refl[line_nr][row_nr] = refl_sum / data_count
+            
+        #return interpolated reflectivity
+        return refl
+
+	
+
+
+
+
+    ####################################################################
+    ### Distance of data point to pattern site ###
+    ####################################################################
     def get_distance(self,radar,azi_nr,range_nr):
         
         '''
-        Calculates distance of a data point to the pattern radar site.
+        calculates the distance (in meters) between a data point 
+        (in rotated coords) and the site coords 
+        (also in rotated coords). Input: Index of data point in radar
+        data array. 
         '''
         
-        #get lat/lon coordinates of data point
-        lon             = radar.data.lon_rota[azi_nr][range_nr]
+        #lon/lat coords of data point out of index of radar data array
+        lon 			= radar.data.lon_rota[azi_nr][range_nr]
         lat             = radar.data.lat_rota[azi_nr][range_nr]
-        
-        #get difference of coordinates in °
-        lon_diff         = lon - self.par.site[0]
-        lat_diff         = lat - self.par.site[1]
-        
-        #get difference in m
-        lon_diff_m     = lon_diff*60*1852
-        lat_diff_m     = lat_diff*60*1852
-        
-        #get distance in m
-        distance         = np.sqrt(lon_diff_m**2 + lat_diff_m**2)
-        
+	   
+        #difference in lon/lat between data point and site coords
+        lon_diff 		= lon - self.par.site[0]
+        lat_diff 		= lat - self.par.site[1]
+
+        #calculate lon/lat difference in meter
+        lon_diff_m 	    = lon_diff*60*1852
+        lat_diff_m 	    = lat_diff*60*1852
+
+        #get distance
+        distance 		= np.sqrt(lon_diff_m**2 + lat_diff_m**2)
+
+        #return distance
         return distance
+	

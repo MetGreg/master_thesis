@@ -70,7 +70,10 @@ class Radar(object):
           '''
           Increases azimuth resolution of radar dataset. This is done
           by looping through the data lines (azimuth angles) and
-          copy each line 'res_factor' times to a new list. 
+          copy each line 'res_fac' times to a new list. 
+          This is equivalent to dividing all grid boxes into 
+          'res_fac' sub-grid boxes, when the coordinates of the sub grid
+          boxes are adjusted (growing with 1/x ° instead of 1°).
           '''
           
           #will be filled with reflectivity values of incr. resolution
