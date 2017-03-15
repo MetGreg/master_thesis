@@ -54,6 +54,7 @@ res_fac2  = par.radar2[3] #factor to incr. azi. res. of 2nd radar
 #          [lon_site,lat_site],max_range,resolution]]
 grid_par  = par.grid_par  #numpy array containing grid parameters 
 tick_frac = par.tick_frac #fract. of grid lines to be labeled in plots
+offset    = par.offset    #offset for wrongly calibrated azimuth angle
 
 #lists
 l_refl    = []            #reflectivity matrices of radars
@@ -79,10 +80,10 @@ correct radar objective (dwd or pattern object)
 ### 1st radar ###
 #pattern radar, proc. step: 'level1'
 if re.search('level1',file1):         
-    radar1 = Pattern('dbz',minute1,file1,res_fac1)
+    radar1 = Pattern(file1,minute1,offset,'dbz',res_fac1)
 #pattern radar, proc. step: 'level2'      
 elif re.search('level2', file1):     
-    radar1 = Pattern(proc_key1,minute1,file1,res_fac1) 
+    radar1 = Pattern(file1,minute1,offset,proc_key1,res_fac1) 
 #dwd radar
 elif re.search('dwd_rad_boo', file1): 
     radar1 = Dwd(file1,res_fac1)
@@ -92,9 +93,9 @@ elif re.search('dwd_rad_boo', file1):
 ### 2nd radar ###
 #same procedure as for level1
 if re.search('level1',file2):
-    radar2 = Pattern('dbz',minute2,file2,res_fac2)  
+    radar2 = Pattern(file2,minute2,offset,'dbz',res_fac2)  
 elif re.search('level2', file2):
-    radar2 = Pattern(proc_key2,minute2,file2,res_fac2)
+    radar2 = Pattern(file2,minute2,offset,proc_key2,res_fac2)
 elif re.search('dwd_rad_boo', file2):
     radar2 = Dwd(file2,res_fac2)
 
@@ -245,11 +246,12 @@ for radar in radars:
     index_matrix_file =  './index_matrix/index_matrix_'     \
                             +str(radar.name)+'_'            \
                             +str(car_grid.par.lon_start)+'_'\
-                        	   +str(car_grid.par.lon_end)+'_'  \
+                            +str(car_grid.par.lon_end)+'_'  \
                             +str(car_grid.par.lat_start)+'_'\
                             +str(car_grid.par.lat_end)+'_'  \
                             +str(car_grid.par.res_m)+'_'    \
-                            +str(radar.res_fac)+'.dat'
+                            +str(radar.res_fac)+'_'         \
+                            +str(offset)+'.dat'
 	
     #Path is used to check, if the file exists
     index_matrix = Path(index_matrix_file)
@@ -373,8 +375,8 @@ ax.yaxis.grid(True, which='major',color = 'k')
 ax.set_axisbelow(False)  
 
 #label x- and y-axis                                                  
-plt.xlabel('longitude',fontsize = 16)                                    
-plt.ylabel('latitude', fontsize = 16)    
+plt.xlabel('r_lon', fontsize = 16)                                    
+plt.ylabel('r_lat', fontsize = 16)    
 
 #title                           
 plt.title(\

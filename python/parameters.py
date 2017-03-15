@@ -52,15 +52,11 @@ parameters specific for the first radar
 '''
 
 #datafile of first radar
-#file1     = '../data/dwd_rad_boo/sweeph5allm/2016/06/07/'\
-#		  +'ras07-pcpng01_sweeph5allm_any_00-'\
-#		  +'2016060716003300-boo-10132-hd5'
-file1     = '../data/dwd_rad_boo/sweeph5allm/2015/07/29/ras07-pcpng01_sweeph5allm_any_00-2015072910203400-boo-10132-hd5'
-#file1     = '../../../pattern/daten/lawr_hdcp2format/HHG/level2/'\
-#            +'2016/06/m4t_HHG_wrx00_l2_dbz_v00_20160607160000.nc'
+#file1     = '../data/dwd_rad_boo/sweeph5allm/2015/07/29/ras07-pcpng01_sweeph5allm_any_00-2015072910203400-boo-10132-hd5'
+file1     = '/scratch/uni/m4t/u300639/master_thesis/data/pattern/lawr/HHG/level2/2015/07/29/m4t_HHG_wrx00_l2_dbz_v00_20150729100000.nc'
 
 #minute of hourly files, that shall be plotted (only concerns pattern)
-minute1   = 0.5                                
+minute1   = 20                                
 
 #key of proc. step to be plotted. Only concerns pattern.
 #dbz_ac1 = step1, dbz_ac2 = step2
@@ -85,12 +81,10 @@ parameters specific for the second radar
 '''
 
 #data file of 2nd radar
-file2     = '/scratch/uni/m4t/u300639/master_thesis/data/pattern/lawr/HHG/level2/2015/07/m4t_HHG_wrx00_l2_dbz_v00_20160729100000.nc'
-#file2     = '../../../pattern/daten/lawr_hdcp2format/HHG/level2/'\
-           # +'2016/06/m4t_HHG_wrx00_l2_dbz_v00_20160607160000.nc'
-  
+file2     = '/scratch/uni/m4t/u300639/master_thesis/data/pattern/lawr/HHG/level2/2015/07/29/m4t_HHG_wrx00_l2_dbz_v00_20150729100000.nc'
+
 #minute of hourly files, that shall be plotted (only concerns pattern).
-minute2   = 20       
+minute2   = 20.5      
 
 #key of proc. step to be plotted. Only concerns pattern.
 #dbz_ac1 = step1, dbz_ac2 = step2
@@ -135,3 +129,13 @@ radar = radar1
 
 
 
+########################################################################
+### general pattern ###
+########################################################################
+
+'''
+Parameters concerning all pattern radars
+'''
+
+#offset for a wrongly calibrated azimuth angle
+offset = -4

@@ -152,7 +152,11 @@ class CartesianGrid:
             for range_nr in range(len(lon_index[azi_nr])):
 
                 #get distance between data point and grid center
-                distance = self.get_distance(radar,azi_nr,range_nr)
+                distance = self.get_distance(
+                    radar,
+                    radar.data.lon_rota[azi_nr][range_nr],
+                    radar.data.lat_rota[azi_nr][range_nr]
+                    )
 
                 #check, if distance is within max range to be plotted
                 if distance <= self.par.max_range:
@@ -178,13 +182,12 @@ class CartesianGrid:
         Interpolates radar data to new cartesian grid. The reflectivity
         value of an interpolated grid box is the mean reflectivity of 
         all data points falling into this grid box.
-        Interpolated value for a grid box is calculating by looping 
-        through the index-matrix. The index-matrix has an entry for each
-        grid box, containing the indices in the radar data array of the
-        data points falling into this grid box. --> Sum reflectivity 
-        values of all data points in the grid box and divide it by the
-        amount of data points falling into this grid box to obtain
-        the averaged (interpolated) reflectivity.
+        The index-matrix has an entry for each grid box, containing the 
+        indices (in the radar data array) of the data points falling 
+        into this grid box. --> For each grid box, obtain its 
+        average (interpolated) reflectivity by summming reflectivity 
+        values of all data points in the grid box and divide the sum by 
+        the amount of data points falling into this grid box.
         '''
 
         #load the index-matrix
@@ -229,19 +232,15 @@ class CartesianGrid:
     ####################################################################
     ### Distance of data point to pattern site ###
     ####################################################################
-    def get_distance(self,radar,azi_nr,range_nr):
+    def get_distance(self,radar,lon,lat):
         
         '''
         calculates the distance (in meters) between a data point 
-        (in rotated coords) and the site coords 
-        (also in rotated coords). Input: Index of data point in radar
-        data array. 
+        (in rotated pole coords) and the site coords 
+        (also in rotated pole coords). Input: lon/lat of data point in 
+        rotated pole coordinates.
         '''
         
-        #lon/lat coords of data point out of index of radar data array
-        lon 			= radar.data.lon_rota[azi_nr][range_nr]
-        lat             = radar.data.lat_rota[azi_nr][range_nr]
-	   
         #difference in lon/lat between data point and site coords
         lon_diff 		= lon - self.par.site[0]
         lat_diff 		= lat - self.par.site[1]

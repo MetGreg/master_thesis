@@ -64,6 +64,7 @@ res_fac   = par.radar[3]  #actor to incr. azimuth resolution
 #            [lon_site,lat_site],max_range,resolution]]
 grid_par  = par.grid_par  #numpy array containing grid parameters 
 tick_frac = par.tick_frac #fract. of grid lines to be labeled in plot
+offset    = par.offset    #offset for wrongly calibrated azimuth angle
 
 #lists
 l_xlabel  = []            #for labeling x-axis
@@ -89,9 +90,9 @@ and create corresponding radar object.
 if re.search('dwd_rad_boo',file_name):
     radar = Dwd(file_name,res_fac)
 elif re.search('level1',file_name):
-    radar = Pattern('dbz',minute,file_name,res_fac)
+    radar = Pattern(file_name,minute,offset,'dbz',res_fac)
 elif re.search('level2',file_name):
-    radar = Pattern(proc_key,minute,file_name,res_fac)
+    radar = Pattern(file_name,minute,offset,proc_key,res_fac)
 
 #read in data
 radar.read_file()
@@ -132,6 +133,7 @@ the box.
 #pixel_center is a np.meshgrid 
 #pixel_center[0] = range, pixel_center[1] = azimuth  
 pixel_center = radar.get_pixel_center() 
+
 
 
 
@@ -180,7 +182,6 @@ radar.data.lat_rota = coords_rot[:,:,1]
 Creates the cartesian grid, on which data shall be plotted.
 '''
 
-
 #CartesianGrid-object
 car_grid = CartesianGrid(grid_par) 
 
@@ -212,7 +213,8 @@ index_matrix_file =  './index_matrix/index_matrix_'     \
                         +str(car_grid.par.lat_start)+'_'\
                         +str(car_grid.par.lat_end)+'_'  \
                         +str(car_grid.par.res_m)+'_'    \
-                        +str(radar.res_fac)+'.dat'
+                        +str(radar.res_fac)+'_'         \
+                        +str(offset)+'.dat'
 
 #Path is used to check, if the file exists
 index_matrix = Path(index_matrix_file)
@@ -323,8 +325,8 @@ ax.yaxis.grid(True, which='major', color = 'k')
 ax.set_axisbelow(False)  
 
 #label x- and y-axis                                                  
-plt.xlabel('longitude', fontsize = 16)                                    
-plt.ylabel('latitude',  fontsize = 16)    
+plt.xlabel('r_lon', fontsize = 16)                                    
+plt.ylabel('r_lat', fontsize = 16)    
 
 #title 
 plt.title(                                        \

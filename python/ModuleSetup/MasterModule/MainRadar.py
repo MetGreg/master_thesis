@@ -88,10 +88,21 @@ class Radar(object):
           
           #save artificially increased dataset to object
           self.data.refl_inc = np.array(data_inc_res)
-          
+         
+          #azi. coords of data pts with artificially incr. res.
+          azi_coords_inc = np.arange(
+                            self.data.azi_start,
+                            self.data.azi_steps*self.data.azi_rays\
+                            + self.data.azi_start,
+                            self.data.azi_steps/self.res_fac
+                            )
+
+          #take care of transition from 360 to 0
+          self.data.azi_coords_inc = (azi_coords_inc + 360) % 360
+
      
-     
-     
+
+
      
      ###################################################################
      ### calculate coordinates of middle pixel for each box ###
@@ -102,13 +113,13 @@ class Radar(object):
           Calculates polar coordination of the middle pixel for each 
           polar grid box of radar data. 
           This is done by averaging azimuth angles and range values of 
-          two adjacent data points respectively, for all data points. 
-          Range coordinates of data points are at the far edge of the
-          corresponding grid cell and azimuth coordinates are at the 
-          near edge. This means, to obtain the coordinates of the middle 
-          pixel of the last grid cell, the coordinates of the last data 
-          point have to be averaged with coordinates of an additional 
-          data point, which is artificially added.
+          two adjacent data points respectively, for all data points.
+          
+          The average can be calculated simply by adding (subtracting) 
+          half of the step to each value for data points at the near 
+          (far) edge of the grid box. (only works, if angle and range
+          step between 2 measurements don't change)
+        
           The coordinates of the middle pixels are then saved
           in form of a numpy meshgrid, which gives access to all
           combinations of range and azimuth coordinates.
@@ -118,29 +129,13 @@ class Radar(object):
           range_coords = self.data.range_coords
           azi_coords   = self.data.azi_coords_inc
           
-          #append range coord of additional data point
-          range_coords = np.append(
-                                   range_coords, 
-                                   range_coords[-1]\
-                                   +(range_coords[-1]-range_coords[-2])
-                                   )   
-          
-          #average all range coords
-          range_coords = range_coords[:-1] -\
-                         (range_coords[1:]-range_coords[:-1])\
-                         /2. 
-        
-          #append azi coord of additional data point
-          azi_coords   = np.append(
-                                   azi_coords, azi_coords[-1] +\
-                                   (azi_coords[-1]-azi_coords[-2])
-                                   )                       
- 
-          #average all azi coords
-          azi_coords   = azi_coords[:-1] +\
-                         (azi_coords[1:]-azi_coords[:-1])\
-                         /2.    
-          
+          #get array of azi coords of middle pixels
+          azi_coords   = (azi_coords + self.data.azi_steps/\
+                            (2*self.res_fac)) % 360
+         
+          #get array of range coords of middle pixels
+          range_coords = range_coords - self.data.r_steps/2
+           
           #create a numpy meshgrid
           pixel_center = np.meshgrid(range_coords, azi_coords)
           
