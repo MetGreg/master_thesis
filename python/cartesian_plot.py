@@ -28,7 +28,7 @@ Modules that need to be imported
 
 #modules
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors                        
+import matplotlib.colors as mcolors                       
 import numpy as np                                        
 import re
 import seaborn as sb
@@ -48,6 +48,8 @@ from MasterModule.GridParameter import GridParameter
 ########################################################################
 ### lists, parameters ###
 ########################################################################
+
+
 
 '''
 Some parameters, that can be set in parameters.py.

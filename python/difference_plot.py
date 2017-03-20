@@ -20,6 +20,7 @@ import re
 import seaborn as sb
 import parameters as par
 from pathlib import Path
+from skimage import measure
 from MasterModule.MainRadar import Radar
 from MasterModule.DWDRadar import Dwd
 from MasterModule.PatternRadar import Pattern
@@ -341,6 +342,10 @@ for i in range(0,ticks,int(ticks/tick_frac)):
     l_xlabel.append(round(lon_plot[i],2))
     l_ylabel.append(round(lat_plot[i],2))
 
+#contours around rain-areas
+contour1 = measure.find_contours(l_refl[0][::-1], 5)
+contour2 = measure.find_contours(l_refl[1][::-1], 5)
+
 
 
 
@@ -378,6 +383,26 @@ ax.set_axisbelow(False)
 plt.xlabel('r_lon', fontsize = 16)                                    
 plt.ylabel('r_lat', fontsize = 16)    
 
+#plot contours of radar1
+for n, contour in enumerate(contour1):
+    ax.plot(contour[:,1], contour[:,0], linewidth=1, color = 'b', 
+            label = 'dwd'
+            )
+
+#plot contours of radar2
+for n, contour in enumerate(contour2):
+    ax.plot(contour[:,1],contour[:,0], linewidth=1, color='r',
+            label = 'pattern'
+            )
+
+#remove all labels except one of each radar
+lines = ax.get_lines()
+for line in lines[1:-1]:
+    line.set_label('')
+
+#legend
+plt.legend()
+
 #title                           
 plt.title(\
           'Difference plot at '\
@@ -387,4 +412,5 @@ plt.title(\
 
 #show  
 plt.show()                                                                
+
 
