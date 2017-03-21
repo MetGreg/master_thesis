@@ -65,12 +65,8 @@ res_fac   = par.radar[3]  #actor to incr. azimuth resolution
 #grid_par = [[[lon_start,lon_end],[lat_start,lat_end],
 #            [lon_site,lat_site],max_range,resolution]]
 grid_par  = par.grid_par  #numpy array containing grid parameters 
-tick_frac = par.tick_frac #fract. of grid lines to be labeled in plot
+tick_nr   = par.tick_nr   #number of grid lines to be labeled
 offset    = par.offset    #offset for wrongly calibrated azimuth angle
-
-#lists
-l_xlabel  = []            #for labeling x-axis
-l_ylabel  = []            #for labeling y-axis
 
 
 
@@ -262,31 +258,26 @@ refl           = refl[::-1]
 prepares plot by defining labling lists, ticks, cmaps etc 
 '''
 
-#calculates rotated lon coord of each grid cell of the cartesian grid
-lon_plot = np.arange(
-                     car_grid.par.lon_start,
-                     car_grid.par.lon_end,
-                     car_grid.par.res_deg
-                     )
+#getting rot. lon-coords of grid lines to be labeled
+lon_plot = np.around(
+            np.linspace(
+                car_grid.par.lon_start,
+                car_grid.par.lon_end,
+                num = tick_nr
+                       ),decimals = 2
+                    )
+                     
+#getting rot. lat-coords of grid lines to be labeled                        
+lat_plot = np.around(
+            np.linspace(
+                car_grid.par.lat_start,
+                car_grid.par.lat_end,
+                num = tick_nr
+                       ),decimals = 2
+                    )
 
-#calculates rotated lat coord of each grid cell of the cartesian grid                        
-lat_plot = np.arange(
-                     car_grid.par.lat_start,
-                     car_grid.par.lat_end,
-                     car_grid.par.res_deg
-                     )
-
-#number of grid lines to be plotted
-ticks    = int(\
-               np.ceil(\
-               (car_grid.par.lon_end - car_grid.par.lon_start)\
-               /car_grid.par.res_deg)\
-               )
-
-#fill label list with lon/lat coordinates to be labeled
-for i in range(0,ticks,int(ticks/tick_frac)):
-    l_xlabel.append(round(lon_plot[i],2))
-    l_ylabel.append(round(lat_plot[i],2))
+#maximum number of grid lines (lon_dim = lat_dim)
+ticks = car_grid.par.lon_dim
 
 #create colormap for plot (continously changing colormap)                                                                    
 cmap     = mcolors.LinearSegmentedColormap.from_list(
@@ -312,12 +303,12 @@ fig,ax = plt.subplots()
 sb.heatmap(refl,vmin = 5, vmax = 70, cmap = cmap)                  
 
 #x- and y-tick positions
-ax.set_xticks(np.arange(0,ticks,ticks/tick_frac), minor = False)                
-ax.set_yticks(np.arange(0,ticks,ticks/tick_frac), minor = False)                
+ax.set_xticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
+ax.set_yticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
 
 #x- and y-tick labels
-ax.set_xticklabels(l_xlabel,fontsize = 14)                                        
-ax.set_yticklabels(l_ylabel,fontsize = 14)                                        
+ax.set_xticklabels(lon_plot,fontsize = 16)                                        
+ax.set_yticklabels(lat_plot,fontsize = 16,rotation = 'horizontal')                                        
 
 #grid
 ax.xaxis.grid(True, which='major', color = 'k')                                
@@ -327,17 +318,19 @@ ax.yaxis.grid(True, which='major', color = 'k')
 ax.set_axisbelow(False)  
 
 #label x- and y-axis                                                  
-plt.xlabel('r_lon', fontsize = 16)                                    
-plt.ylabel('r_lat', fontsize = 16)    
+plt.xlabel('r_lon', fontsize = 18)                                    
+plt.ylabel('r_lat', fontsize = 18)    
 
 #title 
-plt.title(                                        \
-          str(radar.name)                         \
-          +'-data: '                              \
-          + str(radar.data.time_start.time())[0:8]\
-          + ' - '                                 \
-          + str(radar.data.time_end.time())[0:8],
-          fontsize = 24
+plt.title(                                   \
+          str(radar.name)                    \
+          +'-data: '                         \
+          + str(radar.data.time_start.time())\
+          + ' - '                            \
+          + str(radar.data.time_end.time())  \
+          +'\n'\
+          + str(radar.data.time_end.date()),
+          fontsize = 20
          )   
 
 #show  

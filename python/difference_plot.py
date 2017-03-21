@@ -54,13 +54,12 @@ res_fac2  = par.radar2[3] #factor to incr. azi. res. of 2nd radar
 #grid_par = [[[lon_start,lon_end],[lat_start,lat_end],
 #          [lon_site,lat_site],max_range,resolution]]
 grid_par  = par.grid_par  #numpy array containing grid parameters 
-tick_frac = par.tick_frac #fract. of grid lines to be labeled in plots
+tick_nr   = par.tick_nr   #nr. of grid lines to be plotted as a grid
 offset    = par.offset    #offset for wrongly calibrated azimuth angle
+log_iso   = par.log_iso   #if True, rain area contours are plotted
 
 #lists
 l_refl    = []            #reflectivity matrices of radars
-l_xlabel  = []            #for labeling x-axis
-l_ylabel  = []            #for labling y-axis
 
 
 
@@ -228,9 +227,9 @@ for radar in radars:
     
     
     
-    ########################################################################
+    ####################################################################
     ### Check/Create index-matrix ###
-    ########################################################################
+    ####################################################################
 
     '''
     Radar data in rotated pole coordinates will be interpolated to the
@@ -316,35 +315,26 @@ refl_diff = l_refl[1] - l_refl[0]
 prepares plot by defining labling lists etc. 
 '''
 
-#calculates rotated lon coord of each grid cell of the cartesian grid
-lon_plot = np.arange(
-                     car_grid.par.lon_start,
-                     car_grid.par.lon_end,
-                     car_grid.par.res_deg
-                     )
+#getting rot. lon-coords of grid lines to be labeled
+lon_plot = np.around(
+            np.linspace(
+                car_grid.par.lon_start,
+                car_grid.par.lon_end,
+                num = tick_nr
+                       ),decimals = 2
+                    )
                      
-#calculates rotated lat coord of each grid cell of the cartesian grid                        
-lat_plot = np.arange(
-                     car_grid.par.lat_start,
-                     car_grid.par.lat_end,
-                     car_grid.par.res_deg
-                     )
+#getting rot. lat-coords of grid lines to be labeled                        
+lat_plot = np.around(
+            np.linspace(
+                car_grid.par.lat_start,
+                car_grid.par.lat_end,
+                num = tick_nr
+                       ),decimals = 2
+                    )
 
-#number of grid lines to be plotted
-ticks    = int(\
-               np.ceil(\
-               (car_grid.par.lon_end - car_grid.par.lon_start)\
-               /car_grid.par.res_deg)\
-               )
-
-#fill label list with lon/lat coordinates to be labeled
-for i in range(0,ticks,int(ticks/tick_frac)):
-    l_xlabel.append(round(lon_plot[i],2))
-    l_ylabel.append(round(lat_plot[i],2))
-
-#contours around rain-areas
-contour1 = measure.find_contours(l_refl[0][::-1], 5)
-contour2 = measure.find_contours(l_refl[1][::-1], 5)
+#maximum number of grid lines (lon_dim = lat_dim)
+ticks = car_grid.par.lon_dim
 
 
 
@@ -365,12 +355,12 @@ fig,ax = plt.subplots()
 sb.heatmap(refl_diff,vmin = -70, vmax = 70,cmap = 'bwr')                  
 
 #x- and y-tick positions
-ax.set_xticks(np.arange(0,ticks,ticks/tick_frac), minor = False)                
-ax.set_yticks(np.arange(0,ticks,ticks/tick_frac), minor = False)                
+ax.set_xticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
+ax.set_yticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
 
 #x- and y-tick labels
-ax.set_xticklabels(l_xlabel,fontsize = 14)                                        
-ax.set_yticklabels(l_ylabel,fontsize = 14)                                        
+ax.set_xticklabels(lon_plot,fontsize = 16)                                        
+ax.set_yticklabels(lat_plot,fontsize = 16,rotation = 'horizontal')                                        
 
 #grid
 ax.xaxis.grid(True, which='major',color = 'k')                                
@@ -380,35 +370,48 @@ ax.yaxis.grid(True, which='major',color = 'k')
 ax.set_axisbelow(False)  
 
 #label x- and y-axis                                                  
-plt.xlabel('r_lon', fontsize = 16)                                    
-plt.ylabel('r_lat', fontsize = 16)    
+plt.xlabel('r_lon', fontsize = 18)                                    
+plt.ylabel('r_lat', fontsize = 18)    
 
-#plot contours of radar1
-for n, contour in enumerate(contour1):
-    ax.plot(contour[:,1], contour[:,0], linewidth=1, color = 'b', 
-            label = 'dwd'
-            )
+#plot isolines, if wished
+if log_iso == True:
+    
+    #contours around rain-areas
+    contour1 = measure.find_contours(l_refl[0][::-1], 5)
+    contour2 = measure.find_contours(l_refl[1][::-1], 5)
 
-#plot contours of radar2
-for n, contour in enumerate(contour2):
-    ax.plot(contour[:,1],contour[:,0], linewidth=1, color='r',
-            label = 'pattern'
-            )
+    #plot contours of radar1
+    for n, contour in enumerate(contour1):
+        ax.plot(contour[:,1], contour[:,0], linewidth=1, color = 'b', 
+                label = 'dwd'
+                )
+    
+    #plot contours of radar2
+    for n, contour in enumerate(contour2):
+        ax.plot(contour[:,1],contour[:,0], linewidth=1, color='r',
+                label = 'pattern'
+                )
+    
+    #remove all labels except one of each radar
+    lines = ax.get_lines()
+    for line in lines[1:-1]:
+        line.set_label('')
 
-#remove all labels except one of each radar
-lines = ax.get_lines()
-for line in lines[1:-1]:
-    line.set_label('')
-
-#legend
-plt.legend()
+    #legend
+    plt.legend(fontsize = 16)
 
 #title                           
-plt.title(\
-          'Difference plot at '\
-          +str(radar.data.time_start),
+plt.title(
+          radar2.name +\
+          '(' + str(radar2.data.time_start.time()) + ' - '\
+          + str(radar2.data.time_end.time()) + ')'\
+          + ' minus '\
+          + radar1.name\
+          + '(' + str(radar1.data.time_start.time()) + ' - '\
+          + str(radar1.data.time_end.time()) + ')\n'\
+          +str(radar1.data.time_end.date()),
           fontsize = 20
-          )  
+          )
 
 #show  
 plt.show()                                                                
