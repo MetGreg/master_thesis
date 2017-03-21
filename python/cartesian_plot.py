@@ -67,6 +67,7 @@ res_fac   = par.radar[3]  #actor to incr. azimuth resolution
 grid_par  = par.grid_par  #numpy array containing grid parameters 
 tick_nr   = par.tick_nr   #number of grid lines to be labeled
 offset    = par.offset    #offset for wrongly calibrated azimuth angle
+rain_th   = par.rain_th   #threshold, at which rain is assumed
 
 
 
@@ -238,13 +239,13 @@ be set to 5, to avoid large differences at low reflectivity.
 '''
 
 #interpolate radar data to cartesian grid
-refl           = car_grid.data2grid(index_matrix_file,radar)
+refl                 = car_grid.data2grid(index_matrix_file,radar)
 
 #set reflectivities smaller than 5 to 5)
-refl[refl < 5] = 5
+refl[refl < rain_th] = rain_th
 
 #mirror columns --> matplotlib plots the data exactly mirrored
-refl           = refl[::-1]
+refl                 = refl[::-1]
 
 
 

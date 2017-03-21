@@ -57,6 +57,7 @@ grid_par  = par.grid_par  #numpy array containing grid parameters
 tick_nr   = par.tick_nr   #nr. of grid lines to be plotted as a grid
 offset    = par.offset    #offset for wrongly calibrated azimuth angle
 log_iso   = par.log_iso   #if True, rain area contours are plotted
+rain_th   = par.rain_th   #threshold, at which rain is assumed
 
 #lists
 l_refl    = []            #reflectivity matrices of radars
@@ -279,10 +280,10 @@ for radar in radars:
     '''
     
     #interpolate reflectivity to the new grid
-    refl           = car_grid.data2grid(index_matrix_file,radar)
+    refl                 = car_grid.data2grid(index_matrix_file,radar)
     
     #set reflectivities smaller than 5 to 5
-    refl[refl < 5] = 5
+    refl[refl < rain_th] = rain_th
     
     #append inverted reflectivity matrix to list
     #mirror columns --> matplotlib plots the data exactly mirrored
@@ -377,8 +378,8 @@ plt.ylabel('r_lat', fontsize = 18)
 if log_iso == True:
     
     #contours around rain-areas
-    contour1 = measure.find_contours(l_refl[0][::-1], 5)
-    contour2 = measure.find_contours(l_refl[1][::-1], 5)
+    contour1 = measure.find_contours(l_refl[0][::-1], rain_th)
+    contour2 = measure.find_contours(l_refl[1][::-1], rain_th)
 
     #plot contours of radar1
     for n, contour in enumerate(contour1):

@@ -110,8 +110,10 @@ radar2    = [file2,minute2,proc_key2,res_fac2]
 parameters for plotting
 '''
 
-tick_nr = 10     #number of grid lines, that will be plotted as a grid
-log_iso = True   #True --> plot rain area contours
+tick_nr    = 10     #number of grid lines, that will be plotted as a grid
+log_iso    = True   #True --> plot rain area contours
+rain_th    = 5      #dbz threshold, at which rain is assumed
+
 
 
 
