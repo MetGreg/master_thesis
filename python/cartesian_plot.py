@@ -49,8 +49,6 @@ from MasterModule.GridParameter import GridParameter
 ### lists, parameters ###
 ########################################################################
 
-
-
 '''
 Some parameters, that can be set in parameters.py.
 Also, lists of program are defined here.

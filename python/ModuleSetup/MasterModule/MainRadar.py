@@ -9,10 +9,11 @@
 ########################################################################
 ### modules ###
 ########################################################################
-import wradlib.georef as geo
+import wradlib
 import cartopy.crs as ccrs
 import numpy as np
-
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors 
 
 
 
@@ -159,7 +160,7 @@ class Radar(object):
           
           #transform polar coordinates to lon/lat cart. coordinates
           #lon.shape and lat.shape = (360,600) = (azimuth,range)
-          lon,lat = geo.polar2lonlat(
+          lon,lat = wradlib.georef.polar2lonlat(
                         polar_range, polar_azi,
                         (self.data.lon_site, self.data.lat_site),
                         re=6370040
@@ -201,3 +202,79 @@ class Radar(object):
           
           
      
+
+
+     ####################################################################
+     ### method to plot radar data ###
+     ####################################################################
+     def plot(self):
+
+        '''
+        This method plots radar data without any interpolating.
+        '''
+        
+
+
+
+
+        ################################################################
+        ### prepare plot ###
+        ################################################################
+
+        '''
+        prepares the plot by getting data and coordinates as well as
+        turning them into 1D-arrays. (For easier plotting)
+        '''
+
+        #reflectivity array
+        dbz          = self.data.refl
+        
+        #get time
+        time_start   = self.data.time_start
+        time_end     = self.data.time_end
+
+        #get coordinates of data
+        range_coords = self.data.range_coords
+        azi_coords   = self.data.azi_coords
+
+        #create mehsgrid to get all combinations of range and azimuth
+        r,theta      = np.meshgrid(range_coords,azi_coords)
+
+        #make angle, range and reflectivity arrays 1-D
+        r            = np.reshape(r,len(range_coords)*len(azi_coords))
+        theta        = np.reshape(
+                    np.pi/180*theta,len(range_coords)*len(azi_coords)
+                    )
+        refl = np.reshape(dbz,len(range_coords)*len(azi_coords))
+
+
+
+
+
+
+        ################################################################
+        ### actual plot ###
+        ################################################################
+        
+        '''
+        plots data 
+        '''
+
+        #create colormap for plot (continously changing colormap)                                                                    
+        cmap     = mcolors.LinearSegmentedColormap.from_list(
+           'my colormap',['white','blue','red','magenta']
+           )   
+        
+        #create plot and grid
+        cgax, caax, paax, pm = wradlib.vis.plot_cg_ppi(
+            dbz, range_coords, azi_coords, cmap = cmap, 
+            vmin = -32.5, vmax = 70
+                                                      )
+        
+        #create colorbar
+        plt.colorbar(pm)
+        
+        #show plot
+        plt.show()
+        
+        
