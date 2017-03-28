@@ -237,18 +237,10 @@ class Radar(object):
         range_coords = self.data.range_coords
         azi_coords   = self.data.azi_coords
 
-        #create mehsgrid to get all combinations of range and azimuth
-        r,theta      = np.meshgrid(range_coords,azi_coords)
-
-        #make angle, range and reflectivity arrays 1-D
-        r            = np.reshape(r,len(range_coords)*len(azi_coords))
-        theta        = np.reshape(
-                    np.pi/180*theta,len(range_coords)*len(azi_coords)
-                    )
-        refl = np.reshape(dbz,len(range_coords)*len(azi_coords))
-
-
-
+        #put a mask on the reflectivity array
+        mask_ind      = np.where(dbz <= np.nanmin(dbz))
+        dbz[mask_ind] = np.nan
+        ma            = np.ma.array(dbz,mask=np.isnan(dbz))
 
 
 
@@ -267,12 +259,31 @@ class Radar(object):
         
         #create plot and grid
         cgax, caax, paax, pm = wradlib.vis.plot_cg_ppi(
-            dbz, range_coords, azi_coords, cmap = cmap, 
+            ma, range_coords, azi_coords, cmap = cmap, 
             vmin = -32.5, vmax = 70
-                                                      )
-        
+            )
+ 
         #create colorbar
-        plt.colorbar(pm)
+        cbar = plt.colorbar(pm)
+  
+        #set labels
+        caax.set_xlabel('x_range [m]', fontsize = 18)
+        caax.set_ylabel('y_range [m]', fontsize = 18)
+        cbar.set_label('reflectivity [dbz]',fontsize = 18)
+        plt.text(1.0,1.05, 'azimuth', transform=caax.transAxes,
+            va='bottom', ha='right',fontsize = 18
+            )
+        
+        #set tick-label size
+        caax.tick_params(labelsize=16)
+        cgax.axis['top'].major_ticklabels.set_fontsize(16)
+        cgax.axis['right'].major_ticklabels.set_fontsize(16)
+        
+        #create  title
+        plt.title(self.name + ': ' + str(time_start.time()) + ' - '\
+            + str(time_end.time()) + ' UTC \n' + str(time_start.date()),
+            y = 1.05, fontsize = 22
+            )
         
         #show plot
         plt.show()
