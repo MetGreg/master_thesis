@@ -109,7 +109,7 @@ class Pattern(Radar):
         #array of to data points corresponding azimuth coordinates
         azi_coords  =(nc.variables['azi'][:] + self.offset + 360) % 360
         
-        #array of to data points corresponding range coordinates
+        #array of to data points corresponding range coordinates in [m]
         range_coords = nc.variables['range'][:]                                    
         
         #array of measured reflectivity                                        

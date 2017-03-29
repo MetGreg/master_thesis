@@ -250,87 +250,12 @@ refl                 = refl[::-1]
 
 
 ########################################################################
-### prepare plot ###
-########################################################################
-
-'''
-prepares plot by defining labling lists, ticks, cmaps etc 
-'''
-
-#getting rot. lon-coords of grid lines to be labeled
-lon_plot = np.around(
-            np.linspace(
-                car_grid.par.lon_start,
-                car_grid.par.lon_end,
-                num = tick_nr
-                       ),decimals = 2
-                    )
-                     
-#getting rot. lat-coords of grid lines to be labeled                        
-lat_plot = np.around(
-            np.linspace(
-                car_grid.par.lat_start,
-                car_grid.par.lat_end,
-                num = tick_nr
-                       ),decimals = 2
-                    )
-
-#maximum number of grid lines (lon_dim = lat_dim)
-ticks = car_grid.par.lon_dim
-
-#create colormap for plot (continously changing colormap)                                                                    
-cmap     = mcolors.LinearSegmentedColormap.from_list(
-           'my colormap',['white','blue','red','magenta']
-           )    
-
-
-
-
-
-########################################################################
 ### plot data ###
 ########################################################################
 
 '''
-Plots interpolated radar data on the new cartesian grid using seaborn.
+Plots data on the new cartesian grid.
 '''
 
-#create subplot
-fig,ax = plt.subplots() 
+car_grid.plot(tick_nr,radar,refl)
 
-#create heatmap                                                                                                              
-sb.heatmap(refl,vmin = 5, vmax = 70, cmap = cmap)                  
-
-#x- and y-tick positions
-ax.set_xticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
-ax.set_yticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
-
-#x- and y-tick labels
-ax.set_xticklabels(lon_plot,fontsize = 16)                                        
-ax.set_yticklabels(lat_plot,fontsize = 16,rotation = 'horizontal')                                        
-
-#grid
-ax.xaxis.grid(True, which='major', color = 'k')                                
-ax.yaxis.grid(True, which='major', color = 'k')
-
-#put grid in front of data                        
-ax.set_axisbelow(False)  
-
-#label x- and y-axis                                                  
-plt.xlabel('r_lon', fontsize = 18)                                    
-plt.ylabel('r_lat', fontsize = 18)    
-
-#title 
-plt.title(                                   \
-          str(radar.name)                    \
-          +'-data: '                         \
-          + str(radar.data.time_start.time())\
-          + ' - '                            \
-          + str(radar.data.time_end.time())  \
-          +'\n'\
-          + str(radar.data.time_end.date()),
-          fontsize = 20
-         )   
-
-#show  
-plt.show()                                                                

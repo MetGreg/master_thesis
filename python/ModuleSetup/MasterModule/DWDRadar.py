@@ -111,7 +111,7 @@ class Dwd(Radar):
             #take care of transition from 360 to 0
             azi_coords   = (azi_coords + 360) % 360
             
-            #range coords of data pts (far edge of grid cell)
+            #range coords of data pts in [m] (far edge of grid cell) 
             range_coords = np.arange(
                                 r_start+r_steps,
                                 r_steps*r_bins +r_start+r_steps,

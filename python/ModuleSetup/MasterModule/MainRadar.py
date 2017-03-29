@@ -233,14 +233,16 @@ class Radar(object):
         time_start   = self.data.time_start
         time_end     = self.data.time_end
 
-        #get coordinates of data
-        range_coords = self.data.range_coords
+        #get coordinates of data (transform range to km)
+        range_coords = self.data.range_coords/1000
         azi_coords   = self.data.azi_coords
 
         #put a mask on the reflectivity array
         mask_ind      = np.where(dbz <= np.nanmin(dbz))
         dbz[mask_ind] = np.nan
         ma            = np.ma.array(dbz,mask=np.isnan(dbz))
+
+        
 
 
 
@@ -259,20 +261,21 @@ class Radar(object):
         
         #create plot and grid
         cgax, caax, paax, pm = wradlib.vis.plot_cg_ppi(
-            ma, range_coords, azi_coords, cmap = cmap, 
+            ma, range_coords, azi_coords, cmap = cmap, refrac = False,
             vmin = -32.5, vmax = 70
             )
  
-        #create colorbar
+        #create colorbar and increase tick labelsize
         cbar = plt.colorbar(pm)
-  
+        cbar.ax.tick_params(labelsize = 18)
+        
         #set labels
-        caax.set_xlabel('x_range [m]', fontsize = 18)
-        caax.set_ylabel('y_range [m]', fontsize = 18)
+        caax.set_xlabel('x_range [km]', fontsize = 18)
+        caax.set_ylabel('y_range [km]', fontsize = 18)
         cbar.set_label('reflectivity [dbz]',fontsize = 18)
         plt.text(1.0,1.05, 'azimuth', transform=caax.transAxes,
-            va='bottom', ha='right',fontsize = 18
-            )
+           va='bottom', ha='right',fontsize = 18
+           )
         
         #set tick-label size
         caax.tick_params(labelsize=16)
@@ -288,4 +291,4 @@ class Radar(object):
         #show plot
         plt.show()
         
-        
+      
