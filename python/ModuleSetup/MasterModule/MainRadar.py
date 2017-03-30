@@ -222,8 +222,7 @@ class Radar(object):
         ################################################################
 
         '''
-        prepares the plot by getting data and coordinates as well as
-        turning them into 1D-arrays. (For easier plotting)
+        prepares the plot by getting data and coordinates.
         '''
 
         #reflectivity array
@@ -265,9 +264,13 @@ class Radar(object):
             vmin = -32.5, vmax = 70
             )
  
+        #caax.toggle_axisline()
+        #caax.grid(True)
+        
         #create colorbar and increase tick labelsize
         cbar = plt.colorbar(pm)
         cbar.ax.tick_params(labelsize = 18)
+
         
         #set labels
         caax.set_xlabel('x_range [km]', fontsize = 18)

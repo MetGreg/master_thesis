@@ -131,13 +131,13 @@ class CartesianGrid:
                         )
 
         #calculate lat-indices of cart. grid boxes for radar data array
-        lat_index 	= np.floor(
+        lat_index = np.floor(
                         (radar.data.lat_rota - self.par.lat_start)\
                         /self.par.res_deg
                         )
         
         #create empty array with shape of cart. grid 
-        a_index 	= np.empty(
+        a_index   = np.empty(
                         (self.par.lat_dim,self.par.lon_dim),
                         dtype=np.object_
                         )
@@ -147,7 +147,7 @@ class CartesianGrid:
             for row_nr in range(len(a_index[line_nr])):
                 a_index[line_nr][row_nr] = []
 
-        #loop through all radar data points and save their location	
+        #loop through all radar data points and save their location    
         for azi_nr in range(len(lon_index)):
             for range_nr in range(len(lon_index[azi_nr])):
 
@@ -164,7 +164,7 @@ class CartesianGrid:
                     #append loc. of data point to index array entry
                     a_index[int(lat_index[azi_nr][range_nr])]\
                                 [int(lon_index[azi_nr][range_nr])]\
-                                .append([azi_nr,range_nr]) 	
+                                .append([azi_nr,range_nr])     
         
         #save index array to .dat file
         a_index.dump(index_matrix_file)
@@ -195,7 +195,7 @@ class CartesianGrid:
 
         #array with shape of cart. grid for saving interpolated data
         refl = np.empty((self.par.lat_dim,self.par.lon_dim))
-	
+    
         #loop through index matrix
         for line_nr in range(self.par.lat_dim):
             for row_nr in range(self.par.lon_dim):
@@ -224,7 +224,7 @@ class CartesianGrid:
         #return interpolated reflectivity
         return refl
 
-	
+    
 
 
 
@@ -242,19 +242,19 @@ class CartesianGrid:
         '''
         
         #difference in lon/lat between data point and site coords
-        lon_diff 		= lon - self.par.site[0]
-        lat_diff 		= lat - self.par.site[1]
+        lon_diff         = lon - self.par.site[0]
+        lat_diff         = lat - self.par.site[1]
 
         #calculate lon/lat difference in meter
-        lon_diff_m 	    = lon_diff*60*1852
-        lat_diff_m 	    = lat_diff*60*1852
+        lon_diff_m       = lon_diff*60*1852
+        lat_diff_m       = lat_diff*60*1852
 
         #get distance
-        distance 		= np.sqrt(lon_diff_m**2 + lat_diff_m**2)
+        distance         = np.sqrt(lon_diff_m**2 + lat_diff_m**2)
 
         #return distance
         return distance
-	
+    
     
     
     
@@ -262,7 +262,7 @@ class CartesianGrid:
     ####################################################################
     ### plot radar data on cartesian grid ###
     ####################################################################
-    def plot(self,tick_nr,radar,refl):
+    def plot_data(self,tick_nr,radar,refl):
         
         '''
         Plots radar data on a cartesian grid.
@@ -356,7 +356,7 @@ class CartesianGrid:
                   + str(radar.data.time_start.time())\
                   + ' - '                            \
                   + str(radar.data.time_end.time())  \
-                  +'\n'\
+                  +'\n'								 \
                   + str(radar.data.time_end.date()),
                   fontsize = 20
                  )   
@@ -367,3 +367,129 @@ class CartesianGrid:
                 
         
     
+
+    ####################################################################
+    ### plot differences between radars ###
+    ####################################################################
+    def plot_diff(self,tick_nr,refl_diff,log_iso,rain_th,radar1,radar2):
+        
+        '''
+        plots the differences between two radars on the cartesian grid.
+        '''
+        
+        
+        
+        
+        
+        ################################################################
+        ### prepare plot ###
+        ################################################################
+        
+        '''
+        prepares plot by defining labling lists etc. 
+        '''
+        
+        
+        #getting rot. lon-coords of grid lines to be labeled
+        lon_plot = np.around(
+                    np.linspace(
+                        self.par.lon_start,
+                        self.par.lon_end,
+                        num = tick_nr
+                               ),decimals = 2
+                            )
+                             
+        #getting rot. lat-coords of grid lines to be labeled                        
+        lat_plot = np.around(
+                    np.linspace(
+                        self.par.lat_start,
+                        self.par.lat_end,
+                        num = tick_nr
+                               ),decimals = 2
+                            )
+        
+        #maximum number of grid lines (lon_dim = lat_dim)
+        ticks = self.par.lon_dim
+        
+        
+        
+        
+        
+        ################################################################
+        ### actual plot ###
+        ################################################################
+                
+        '''
+        Plots difference matrix on the new cartesian grid using seaborn.
+        '''
+        
+        #create subplot
+        fig,ax = plt.subplots() 
+        
+        #create heatmap                                                                                                              
+        sb.heatmap(refl_diff,vmin = -70, vmax = 70,cmap = 'bwr')                  
+        
+        #x- and y-tick positions
+        ax.set_xticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
+        ax.set_yticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
+        
+        #x- and y-tick labels
+        ax.set_xticklabels(lon_plot,fontsize = 16)                                        
+        ax.set_yticklabels(lat_plot,fontsize = 16,rotation='horizontal')                                        
+        
+        #grid
+        ax.xaxis.grid(True, which='major',color = 'k')                                
+        ax.yaxis.grid(True, which='major',color = 'k')
+        
+        #put grid in front of data                        
+        ax.set_axisbelow(False)  
+        
+        #label x- and y-axis                                                  
+        plt.xlabel('r_lon', fontsize = 18)                                    
+        plt.ylabel('r_lat', fontsize = 18)    
+        
+        #plot isolines, if wished
+        if log_iso == True:
+            
+            #contours around rain-areas
+            contour1 = measure.find_contours(l_refl[0][::-1], rain_th)
+            contour2 = measure.find_contours(l_refl[1][::-1], rain_th)
+        
+            #plot contours of radar1
+            for n, contour in enumerate(contour1):
+                ax.plot(contour[:,1], contour[:,0], linewidth=1, 
+                    color = 'b', label = 'dwd'
+                    )
+            
+            #plot contours of radar2
+            for n, contour in enumerate(contour2):
+                ax.plot(contour[:,1],contour[:,0], linewidth=1, 
+                    color='r',label = 'pattern'
+                    )
+            
+            #remove all labels except one of each radar
+            lines = ax.get_lines()
+            for line in lines[1:-1]:
+                line.set_label('')
+        
+            #legend
+            plt.legend(fontsize = 16)
+        
+        #title                           
+        plt.title(
+                  radar2.name +										\
+                  '(' + str(radar2.data.time_start.time()) + ' - '	\
+                  + str(radar2.data.time_end.time()) + ')'		  	\
+                  + ' minus ' + radar1.name							\
+                  + '(' + str(radar1.data.time_start.time()) + ' - '\
+                  + str(radar1.data.time_end.time()) + ')\n'		\
+                  +str(radar1.data.time_end.date()),
+                  fontsize = 20
+                  )
+        
+        #show  
+        plt.show()                                                                
+        
+        
+        
+        

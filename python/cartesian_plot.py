@@ -257,5 +257,5 @@ refl                 = refl[::-1]
 Plots data on the new cartesian grid.
 '''
 
-car_grid.plot(tick_nr,radar,refl)
+car_grid.plot_data(tick_nr,radar,refl)
 

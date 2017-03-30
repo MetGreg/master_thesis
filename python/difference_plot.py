@@ -309,112 +309,13 @@ refl_diff = l_refl[1] - l_refl[0]
 
 
 ########################################################################
-### prepare plot ###
+### plot differences ###
 ########################################################################
 
 '''
-prepares plot by defining labling lists etc. 
+Plot the differences between the two radars on the cartesian grid by
+calling the plot_diff method of the cartesian grid objectiv.
 '''
 
-#getting rot. lon-coords of grid lines to be labeled
-lon_plot = np.around(
-            np.linspace(
-                car_grid.par.lon_start,
-                car_grid.par.lon_end,
-                num = tick_nr
-                       ),decimals = 2
-                    )
-                     
-#getting rot. lat-coords of grid lines to be labeled                        
-lat_plot = np.around(
-            np.linspace(
-                car_grid.par.lat_start,
-                car_grid.par.lat_end,
-                num = tick_nr
-                       ),decimals = 2
-                    )
-
-#maximum number of grid lines (lon_dim = lat_dim)
-ticks = car_grid.par.lon_dim
-
-
-
-
-
-########################################################################
-### actual plot ###
-########################################################################
-
-'''
-Plots difference matrix on the new cartesian grid using seaborn.
-'''
-
-#create subplot
-fig,ax = plt.subplots() 
-
-#create heatmap                                                                                                              
-sb.heatmap(refl_diff,vmin = -70, vmax = 70,cmap = 'bwr')                  
-
-#x- and y-tick positions
-ax.set_xticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
-ax.set_yticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
-
-#x- and y-tick labels
-ax.set_xticklabels(lon_plot,fontsize = 16)                                        
-ax.set_yticklabels(lat_plot,fontsize = 16,rotation = 'horizontal')                                        
-
-#grid
-ax.xaxis.grid(True, which='major',color = 'k')                                
-ax.yaxis.grid(True, which='major',color = 'k')
-
-#put grid in front of data                        
-ax.set_axisbelow(False)  
-
-#label x- and y-axis                                                  
-plt.xlabel('r_lon', fontsize = 18)                                    
-plt.ylabel('r_lat', fontsize = 18)    
-
-#plot isolines, if wished
-if log_iso == True:
-    
-    #contours around rain-areas
-    contour1 = measure.find_contours(l_refl[0][::-1], rain_th)
-    contour2 = measure.find_contours(l_refl[1][::-1], rain_th)
-
-    #plot contours of radar1
-    for n, contour in enumerate(contour1):
-        ax.plot(contour[:,1], contour[:,0], linewidth=1, color = 'b', 
-                label = 'dwd'
-                )
-    
-    #plot contours of radar2
-    for n, contour in enumerate(contour2):
-        ax.plot(contour[:,1],contour[:,0], linewidth=1, color='r',
-                label = 'pattern'
-                )
-    
-    #remove all labels except one of each radar
-    lines = ax.get_lines()
-    for line in lines[1:-1]:
-        line.set_label('')
-
-    #legend
-    plt.legend(fontsize = 16)
-
-#title                           
-plt.title(
-          radar2.name +\
-          '(' + str(radar2.data.time_start.time()) + ' - '\
-          + str(radar2.data.time_end.time()) + ')'\
-          + ' minus '\
-          + radar1.name\
-          + '(' + str(radar1.data.time_start.time()) + ' - '\
-          + str(radar1.data.time_end.time()) + ')\n'\
-          +str(radar1.data.time_end.date()),
-          fontsize = 20
-          )
-
-#show  
-plt.show()                                                                
-
-
+#plot differences
+car_grid.plot_diff(tick_nr,refl_diff,log_iso,rain_th,radar1,radar2)
