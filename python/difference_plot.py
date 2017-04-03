@@ -20,7 +20,6 @@ import re
 import seaborn as sb
 import parameters as par
 from pathlib import Path
-from skimage import measure
 from MasterModule.MainRadar import Radar
 from MasterModule.DWDRadar import Dwd
 from MasterModule.PatternRadar import Pattern
