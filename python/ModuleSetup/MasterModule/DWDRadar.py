@@ -78,28 +78,35 @@ class Dwd(Radar):
             '''
 
             #lon/lat coordinates of radar site
-            lon_site   = h5py_file.get('where').attrs['lon']                           
-            lat_site   = h5py_file.get('where').attrs['lat']
+            lon_site     = h5py_file.get('where').attrs['lon']                           
+            lat_site     = h5py_file.get('where').attrs['lat']
+            
+            #elevation of radar beam
+            ele          = h5py_file.get('dataset1/where')\
+                            .attrs['elangle']
 
             #number of azimuth rays(360 --> 1° steps)
-            azi_rays   = h5py_file.get('dataset1/where').attrs['nrays'] 
+            azi_rays     = h5py_file.get('dataset1/where')\
+                            .attrs['nrays'] 
 
             #number of radius bins (600 --> 250m steps up to 150000m)                           
-            r_bins     = h5py_file.get('dataset1/where').attrs['nbins']
+            r_bins       = h5py_file.get('dataset1/where')\
+                            .attrs['nbins']
 
             #azimuth angle of first measurement
-            azi_start  = (h5py_file.get('dataset1/where')\
-                                  .attrs['startaz'] + 360) % 360
+            azi_start    = (h5py_file.get('dataset1/where')\
+                            .attrs['startaz'] + 360) % 360
             
             #range of first measurement                    
-            r_start    = h5py_file.get('dataset1/where').attrs['rstart']
+            r_start      = h5py_file.get('dataset1/where')\
+                            .attrs['rstart']
 
             #angle step between 2 measurements
-            azi_steps  = h5py_file.get('dataset1/how')\
-                                  .attrs['angle_step']
+            azi_steps    = h5py_file.get('dataset1/how')\
+                            .attrs['angle_step']
 
             #distance between 2 measurements on radius-axis (250m)                    
-            r_steps    = h5py_file.get('dataset1/where').attrs['rscale']                 
+            r_steps      = h5py_file.get('dataset1/where').attrs['rscale']                 
  
             #azi coords of data pts (near edge of grid box)
             azi_coords   = np.arange(
@@ -119,22 +126,22 @@ class Dwd(Radar):
                                 )  
             
             #factor to correct the dwd refl to ordinary dbz values      
-            gain       = h5py_file.get('dataset1/data1/what')\
+            gain         = h5py_file.get('dataset1/data1/what')\
                                   .attrs['gain']
 
             #Offset, to correct the dwd refl to ordinary dbz values 
-            offset     = h5py_file.get('dataset1/data1/what')\
+            offset       = h5py_file.get('dataset1/data1/what')\
                                   .attrs['offset']   
             #uncorrected data 
-            refl       = h5py_file.get('dataset1/data1/data')
+            refl         = h5py_file.get('dataset1/data1/data')
 
             #time at which scan started                         
-            time_start = h5py_file.get('how').attrs['startepochs']
-            time_start = datetime.utcfromtimestamp(time_start) 
+            time_start   = h5py_file.get('how').attrs['startepochs']
+            time_start   = datetime.utcfromtimestamp(time_start) 
 
             #time at which scan ended                       
-            time_end   = h5py_file.get('how').attrs['endepochs']                        
-            time_end   = datetime.utcfromtimestamp(time_end)
+            time_end     = h5py_file.get('how').attrs['endepochs']                        
+            time_end     = datetime.utcfromtimestamp(time_end)
 
 
 
@@ -151,6 +158,9 @@ class Dwd(Radar):
             #lon/lat coordinates of radar site
             radar_data.lon_site       = lon_site                                               
             radar_data.lat_site       = lat_site
+            
+            #elevation of radar beam
+            radar_data.ele            = ele    
 
             #number of azimuth rays(360 --> 1° steps)
             radar_data.azi_rays       = int(azi_rays)   

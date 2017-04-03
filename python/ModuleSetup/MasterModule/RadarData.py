@@ -493,3 +493,27 @@ class RadarData:
         assert isinstance(new_time_end, datetime),\
                 'new time_start is no datetime object'
         self._time_end = new_time_end
+
+
+
+
+
+    ####################################################################
+    ### elevation of radar beam ###
+    ####################################################################
+    @property
+    def ele(self):
+
+        '''
+        Elevation of radar beam in degrees. Must be float.
+        '''
+        
+        try:
+            return self._ele
+        except AttributeError:
+            return 0
+
+    @ele.setter
+    def ele(self, new_ele):
+        assert isinstance(new_ele, float), 'new_ele not a float'
+        self._ele = new_ele

@@ -86,6 +86,9 @@ class Pattern(Radar):
         #lon/lat coords of site
         lon_site    = nc.variables['lon'][:]                                        
         lat_site    = nc.variables['lat'][:]
+        
+        #elevation of radar beam
+        ele         = nc.variables['ele']
 
         #number of azimuth rays
         azi_rays    = nc.dimensions['azi'].size                                    
@@ -139,6 +142,9 @@ class Pattern(Radar):
         radar_data.lon_site      = float(lon_site)                                            
         radar_data.lat_site      = float(lat_site)                                            
         
+        #elevation of radar beam
+        radar_data.ele           = ele
+
         #number of azimuth rays
         radar_data.azi_rays      = int(azi_rays)  
         
