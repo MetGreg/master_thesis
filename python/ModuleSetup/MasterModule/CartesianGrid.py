@@ -152,7 +152,7 @@ class CartesianGrid:
             for range_nr in range(len(lon_index[azi_nr])):
 
                 #get distance between data point and grid center
-                distance = self.get_distance(
+                distance = self.dist_polar2radar(
                     radar,
                     radar.data.lon_rota[azi_nr][range_nr],
                     radar.data.lat_rota[azi_nr][range_nr]
@@ -232,7 +232,7 @@ class CartesianGrid:
     ####################################################################
     ### Distance of data point to pattern site ###
     ####################################################################
-    def get_distance(self,radar,lon,lat):
+    def dist_polar2radar(self,radar,lon,lat):
         
         '''
         calculates the distance (in meters) between a data point 
@@ -259,6 +259,61 @@ class CartesianGrid:
     
     
     
+    ####################################################################
+    ### Distance of grid boxes to radar site ###
+    ####################################################################
+    def dist_grid2radar(self,radar):
+
+        '''
+        Calculates the distance (in meters) between a grid box of the 
+        cartesian grid and the radar site.
+        '''
+        
+        a_dist = np.empty(
+                        (self.par.lat_dim,self.par.lon_dim),
+                        dtype=np.object_
+                        )
+
+        #coordinates of radar site in polar coordinates
+        lon_site  = radar.data.lon_site
+        lat_site  = radar.data.lat_site
+        
+        #calculate rotated coords of radar site
+        coords_rot = radar.rotate_pole(
+            np.array(lon_site),np.array(lat_site)
+            ) 
+
+        #get lon-index of grid box in which the radar site is located
+        lon_index = np.floor(
+                        (coords_rot[0][0] - self.par.lon_start)\
+                        /self.par.res_deg
+                        )
+
+        #get lat index of grid box in which the radar site is located
+        lat_index = np.floor(
+                        (coords_rot[0][1] - self.par.lat_start)\
+                        /self.par.res_deg
+                        )
+
+        #loop through index matrix
+        for line_nr in range(self.par.lat_dim):
+            for row_nr in range(self.par.lon_dim):
+                
+                #calc dist in y- and x-axis between site and grid box
+                lon_dist = (lon_index - line_nr)*self.par.res_m
+                lat_dist = (lat_index - row_nr)*self.par.res_m
+
+                #calc dist between site and grid box using pythagoras
+                a_dist[line_nr][row_nr] = np.sqrt(
+                    lon_dist**2 + lat_dist**2
+                    )
+       
+        return a_dist
+
+
+
+
+
     ####################################################################
     ### plot radar data on cartesian grid ###
     ####################################################################
@@ -356,7 +411,7 @@ class CartesianGrid:
                   + str(radar.data.time_start.time())\
                   + ' - '                            \
                   + str(radar.data.time_end.time())  \
-                  +'\n'								 \
+                  +'\n'                              \
                   + str(radar.data.time_end.date()),
                   fontsize = 20
                  )   
@@ -477,12 +532,12 @@ class CartesianGrid:
         
         #title                           
         plt.title(
-                  radar2.name +										\
-                  '(' + str(radar2.data.time_start.time()) + ' - '	\
-                  + str(radar2.data.time_end.time()) + ')'		  	\
-                  + ' minus ' + radar1.name							\
+                  radar2.name +                                     \
+                  '(' + str(radar2.data.time_start.time()) + ' - '  \
+                  + str(radar2.data.time_end.time()) + ')'          \
+                  + ' minus ' + radar1.name                         \
                   + '(' + str(radar1.data.time_start.time()) + ' - '\
-                  + str(radar1.data.time_end.time()) + ')\n'		\
+                  + str(radar1.data.time_end.time()) + ')\n'        \
                   +str(radar1.data.time_end.date()),
                   fontsize = 20
                   )
