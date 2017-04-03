@@ -294,21 +294,6 @@ for radar in radars:
 
 
 ########################################################################
-### Calculate Difference ###
-########################################################################
-
-'''
-Calculates differences of the two reflectivity matrices.
-'''
-
-#difference between two data fields
-refl_diff = l_refl[1] - l_refl[0]
-
-
-
-
-
-########################################################################
 ### plot differences ###
 ########################################################################
 
@@ -318,4 +303,4 @@ calling the plot_diff method of the cartesian grid objectiv.
 '''
 
 #plot differences
-car_grid.plot_diff(tick_nr,refl_diff,log_iso,rain_th,radar1,radar2)
+car_grid.plot_diff(tick_nr,l_refl,log_iso,rain_th,radar1,radar2)

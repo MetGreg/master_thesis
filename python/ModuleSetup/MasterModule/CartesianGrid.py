@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import seaborn as sb
+from skimage import measure
 from .GridParameter import GridParameter
 
 
@@ -266,12 +267,18 @@ class CartesianGrid:
 
         '''
         Calculates the distance (in meters) between a grid box of the 
-        cartesian grid and the radar site.
+        cartesian grid and the radar site. 
+        First, calculates rotated coords of radar site. This can be 
+        transformed to an index of the cartesian grid. -->
+        Index of grid box, in which radar site lies is known.
+        --> Get distance of each grid box to radar site, by multiplying
+        differences in x- and y- indices with the length of a grid box
+        and using pythagoras.        
         '''
         
+        #create empty array with shape of cart grid for saving distances
         a_dist = np.empty(
                         (self.par.lat_dim,self.par.lon_dim),
-                        dtype=np.object_
                         )
 
         #coordinates of radar site in polar coordinates
@@ -295,7 +302,7 @@ class CartesianGrid:
                         /self.par.res_deg
                         )
 
-        #loop through index matrix
+        #loop through cartesian grid, calc distance for each grid box
         for line_nr in range(self.par.lat_dim):
             for row_nr in range(self.par.lon_dim):
                 
@@ -308,6 +315,7 @@ class CartesianGrid:
                     lon_dist**2 + lat_dist**2
                     )
        
+        #return distance array
         return a_dist
 
 
@@ -426,7 +434,7 @@ class CartesianGrid:
     ####################################################################
     ### plot differences between radars ###
     ####################################################################
-    def plot_diff(self,tick_nr,refl_diff,log_iso,rain_th,radar1,radar2):
+    def plot_diff(self,tick_nr,l_refl,log_iso,rain_th,radar1,radar2):
         
         '''
         plots the differences between two radars on the cartesian grid.
@@ -444,7 +452,9 @@ class CartesianGrid:
         prepares plot by defining labling lists etc. 
         '''
         
-        
+        #get differences of two radar data arrays
+        refl_diff = l_refl[1] - l_refl[0]
+
         #getting rot. lon-coords of grid lines to be labeled
         lon_plot = np.around(
                     np.linspace(
@@ -548,3 +558,104 @@ class CartesianGrid:
         
         
         
+
+    ####################################################################
+    ### plot heights ###
+    ####################################################################
+    def plot_heights(self,heights,isolines,tick_nr,radar):
+
+        '''
+        Plots heights of radar beam as isolines
+        '''
+    
+
+
+
+
+        ################################################################
+        ### prepare plot ###
+        ################################################################
+        
+        '''
+        prepares plot by defining labling lists etc. 
+        '''
+        
+        
+        #getting rot. lon-coords of grid lines to be labeled
+        lon_plot = np.around(
+                    np.linspace(
+                        self.par.lon_start,
+                        self.par.lon_end,
+                        num = tick_nr
+                               ),decimals = 2
+                            )
+                             
+        #getting rot. lat-coords of grid lines to be labeled                        
+        lat_plot = np.around(
+                    np.linspace(
+                        self.par.lat_start,
+                        self.par.lat_end,
+                        num = tick_nr
+                               ),decimals = 2
+                            )
+        
+        #maximum number of grid lines (lon_dim = lat_dim)
+        ticks = self.par.lon_dim
+
+
+
+
+
+        ################################################################
+        ### actual plot ###
+        ################################################################
+                
+        '''
+        Plots heights of radar beam as isolines on the cartesian grid
+        '''
+
+        #create subplot
+        fig,ax = plt.subplots(figsize=(8,8)) 
+
+        #x- and y-tick positions
+        ax.set_xticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
+        ax.set_yticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
+        
+        #x- and y-tick labels
+        ax.set_xticklabels(lon_plot,fontsize = 16)                                        
+        ax.set_yticklabels(lat_plot,fontsize = 16,rotation='horizontal')                                        
+        
+        #grid
+        ax.xaxis.grid(True, which='major',color = 'k')                                
+        ax.yaxis.grid(True, which='major',color = 'k')
+        
+        #put grid in front of data                        
+        ax.set_axisbelow(False)  
+        
+        #label x- and y-axis                                                  
+        plt.xlabel('r_lon', fontsize = 18)                                    
+        plt.ylabel('r_lat', fontsize = 18)    
+        
+        #contours of heights
+        for isoline in isolines:
+
+            #find contours
+            contours = measure.find_contours(heights, isoline)
+       
+            #plot contours
+            for n, contour in enumerate(contours):
+                ax.plot(contour[:,1], contour[:,0], linewidth=1, 
+                    color = 'b'
+                    )
+        
+        #legend
+        plt.legend(fontsize = 16)
+    
+        #title                           
+        plt.title(
+                  radar.name + ' - heights',
+                  fontsize = 20
+                  )
+
+        #show plot
+        plt.show()
