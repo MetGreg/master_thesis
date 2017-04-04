@@ -231,6 +231,66 @@ class CartesianGrid:
 
 
     ####################################################################
+    ### Mask around pattern area ###
+    ####################################################################
+    def get_mask(self):
+        
+        '''
+        Gets a mask of the same shape as the cartesian grid. All grid
+        boxes, which are not in the pattern area will be masked.
+        The distance between each grid box to the pattern grid box is
+        calculated. The pattern grid box is the grid box in which the
+        pattern radar is located. A grid box is considered out of range
+        (and thus masked), if the distance between its mid to the mid
+        of the pattern grid box is larger than the pattern range.
+        '''
+
+        #create empty array with shape of cart grid for saving distances
+        a_mask = np.empty(
+                    (self.par.lat_dim,self.par.lon_dim),
+                    )
+
+        #coordinates of radar site in rotated pole coordinates
+        lon_site  = self.par.site[0]
+        lat_site  = self.par.site[1]
+
+        #get lon-index of grid box in which the radar site is located
+        site_lon_index = np.floor(
+            (lon_site - self.par.lon_start) / self.par.res_deg
+            )
+
+        #get lat index of grid box in which the radar site is located
+        site_lat_index = np.floor(
+            (lat_site - self.par.lat_start) / self.par.res_deg
+            )
+        
+        #create numpy array of lon at lat indices of grid boxes
+        lon_index = np.arange(self.par.lon_dim)
+        lat_index = np.arange(self.par.lat_dim)
+
+        #create meshgrid out of grid box indices
+        x_index, y_index = np.meshgrid(lon_index,lat_index)
+
+        #calculate distance to radar site for each grid box
+        dist = np.sqrt(
+              ((site_lon_index-x_index) * self.par.res_m)**2\
+            + ((site_lat_index-y_index) * self.par.res_m)**2
+            )
+        
+        #get mask array
+        a_mask[dist <= self.par.max_range] = 0
+        a_mask[dist > self.par.max_range]  = 1
+        
+        print(min(np.reshape(a_mask,self.par.lat_dim*self.par.lon_dim)))
+
+        #return mask
+        return a_mask
+
+
+
+
+
+    ####################################################################
     ### Distance of data point to pattern site ###
     ####################################################################
     def dist_polar2radar(self,radar,lon,lat):
