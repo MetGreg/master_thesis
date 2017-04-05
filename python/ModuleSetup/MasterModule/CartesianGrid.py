@@ -116,10 +116,9 @@ class CartesianGrid:
         '''
         Method to create and save index-matrix. This is an array, that
         has exactly the shape of the cartesian grid. It has an entry
-        for each grid box. This entry will be a list, which has an entry
-        for each radar data point falling into the corresponding grid
-        box. This list entry will then be the location (index) of the 
-        data point in the radar data array.        
+        for each grid box. This entry will be an array, containing (for 
+        each data point falling into this grid box) the location (in 
+        form of an index )of the data point in the radar data array.  
         '''
         
         #can take a while (depending on resolution)
@@ -140,40 +139,26 @@ class CartesianGrid:
         #create empty array with shape of cart. grid 
         a_index   = np.empty(
                         (self.par.lat_dim,self.par.lon_dim),
-                        dtype=np.object_
+                        dtype = np.object_
                         )
 
-        #fill empty index array with empty lists
-        for line_nr in range(len(a_index)):
-            for row_nr in range(len(a_index[line_nr])):
-                a_index[line_nr][row_nr] = []
-
+       
         #loop through all radar data points and save their location    
-        for azi_nr in range(len(lon_index)):
-            for range_nr in range(len(lon_index[azi_nr])):
-
-                #get distance between data point and grid center
-                distance = self.dist_polar2radar(
-                    radar,
-                    radar.data.lon_rota[azi_nr][range_nr],
-                    radar.data.lat_rota[azi_nr][range_nr]
-                    )
-
-                #check, if distance is within max range to be plotted
-                if distance <= self.par.max_range:
-
-                    #append loc. of data point to index array entry
-                    a_index[int(lat_index[azi_nr][range_nr])]\
-                                [int(lon_index[azi_nr][range_nr])]\
-                                .append([azi_nr,range_nr])     
-        
-        #save index array to .dat file
+        for line_nr in range(self.par.lat_dim):
+             for row_nr in range(self.par.lon_dim):
+                
+                #find indices of data array, where data lies
+                indices = np.where(np.logical_and(lon_index == row_nr,lat_index == line_nr))
+                
+                #append loc. of data point to index array entry
+                a_index[line_nr][row_nr] = indices
+    
         a_index.dump(index_matrix_file)
+            
+        
 
-    
 
 
-    
     ####################################################################
     ### Interpolation method ###
     ####################################################################
@@ -185,43 +170,37 @@ class CartesianGrid:
         all data points falling into this grid box.
         The index-matrix has an entry for each grid box, containing the 
         indices (in the radar data array) of the data points falling 
-        into this grid box. --> For each grid box, obtain its 
-        average (interpolated) reflectivity by summming reflectivity 
-        values of all data points in the grid box and divide the sum by 
-        the amount of data points falling into this grid box.
+        into this grid box. --> Calculate mean of these data points and
+        save it to the corresponding refl-array entry.
         '''
 
-        #load the index-matrix
         a_index = np.load(index_matrix_file)
 
         #array with shape of cart. grid for saving interpolated data
         refl = np.empty((self.par.lat_dim,self.par.lon_dim))
-    
+        
+        #calculate lon-indices of cart. grid boxes for radar data array
+        lon_index = np.floor(
+                        (radar.data.lon_rota - self.par.lon_start)\
+                        /self.par.res_deg
+                        )
+
+        #calculate lat-indices of cart. grid boxes for radar data array
+        lat_index = np.floor(
+                        (radar.data.lat_rota - self.par.lat_start)\
+                        /self.par.res_deg
+                        )
+
         #loop through index matrix
         for line_nr in range(self.par.lat_dim):
             for row_nr in range(self.par.lon_dim):
                 
-                #set reflectivity sum to zero for each grid box
-                refl_sum = 0
+                #get values of radar data array
+                values = radar.data.refl_inc[a_index[line_nr][row_nr]]
                 
-                #loop through all data points of the current grid box
-                for data_point in a_index[line_nr][row_nr]:
-                    
-                    #add the refl. value to the sum variable
-                    refl_sum += radar.data.refl_inc\
-                                    [data_point[0]][data_point[1]]
-                
-                #get amount of data pts falling into the grid box
-                data_count = len(a_index[line_nr][row_nr])
-                
-                #avoid division by zero
-                if data_count == 0:
-                    refl[line_nr][row_nr] = np.NaN
-                
-                #calculate and save average reflectivity
-                else:
-                    refl[line_nr][row_nr] = refl_sum / data_count
-            
+                #save mean reflectivity to refl-array
+                refl[line_nr][row_nr] = np.mean(values)
+
         #return interpolated reflectivity
         return refl
 
@@ -245,7 +224,7 @@ class CartesianGrid:
         of the pattern grid box is larger than the pattern range.
         '''
 
-        #create empty array with shape of cart grid for saving distances
+        #create empty array with shape of cart grid for the mask
         a_mask = np.empty(
                     (self.par.lat_dim,self.par.lon_dim),
                     )
@@ -278,11 +257,9 @@ class CartesianGrid:
             )
         
         #get mask array
-        a_mask[dist <= self.par.max_range] = 0
-        a_mask[dist > self.par.max_range]  = 1
+        a_mask[dist <= self.par.max_range] = False
+        a_mask[dist > self.par.max_range]  = True
         
-        print(min(np.reshape(a_mask,self.par.lat_dim*self.par.lon_dim)))
-
         #return mask
         return a_mask
 
@@ -442,8 +419,13 @@ class CartesianGrid:
         seaborn.
         '''
         
-        #create heatmap                                                                                                              
-        ax = sb.heatmap(refl,vmin = 5, vmax = 70, cmap = cmap)                  
+        #create heatmap  
+        mask = self.get_mask()         
+        
+        #create seaborn plot
+        ax =  sb.heatmap(
+            refl, mask = mask,vmin = 5, vmax = 70, cmap = cmap
+            )                  
         
         #x- and y-tick positions
         ax.set_xticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
