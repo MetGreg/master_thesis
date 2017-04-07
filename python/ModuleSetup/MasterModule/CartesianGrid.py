@@ -10,11 +10,11 @@
 ### modules ###
 ########################################################################
 import numpy as np
+import numpy.ma as ma
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-import seaborn as sb
+from matplotlib.colors import LinearSegmentedColormap as lsc
 from skimage import measure
-from .GridParameter import GridParameter
+import seaborn as sb
 
 
 
@@ -43,9 +43,6 @@ class CartesianGrid:
         Saves the grid paramaters to a GridParameter-object.
         '''
         
-        #create gridParameter object, which has defined grid parameters
-        grid           = GridParameter()
-        
 
 
 
@@ -55,59 +52,63 @@ class CartesianGrid:
         ################################################################
 
         '''
-        reads the grid definition, as defined in parameters.py
+        Reads the grid definition, as defined in parameters.py
         '''
         
-        lon_start      = grid_par[0][0]     #starting longitude
-        lon_end        = grid_par[0][1]     #ending longitude
-        lat_start      = grid_par[1][0]     #starting latitude
-        lat_end        = grid_par[1][1]     #ending latitude
-        site           = grid_par[2]        #rot. coords of pattern site
-        max_range      = grid_par[3]        #max. range (m) of pat radar 
-        res            = float(grid_par[4]) #grid resolution in m
+        pat_site  = grid_par[0]        #rot. coords of pattern site
+        max_range = grid_par[2]        #max. range (m) of pat radar 
+        res       = float(grid_par[3]) #grid resolution in m
+        shape     = grid_par[1]        #shape of the grid
+
+        lon_start = pat_site[0] - 1/(60*1852/(res*shape[0]/2))
+        lon_end   = pat_site[0] + 1/(60*1852/(res*shape[0]/2))                                      
+        lat_start = pat_site[1] - 1/(60*1852/(res*shape[1]/2))                                    
+        lat_end   = pat_site[1] + 1/(60*1852/(res*shape[1]/2))                                        
         
-
-
 
 
         ################################################################
-        ###save grid definition to gridParameter-object ###
+        ### save grid definition to object ###
         ################################################################
 
         '''
-        saves grid definition to object
+        Saves grid definition to object.
         '''
         
         #coords of grid corners
-        grid.lon_start = lon_start                                    
-        grid.lon_end   = lon_end                                        
-        grid.lat_start = lat_start                                    
-        grid.lat_end   = lat_end                                        
+        self.lon_start  = lon_start                                    
+        self.lon_end    = lon_end                                      
+        self.lat_start  = lat_start                                    
+        self.lat_end    = lat_end                                        
         
         #rotated coords of pattern site
-        grid.site      = site
+        self.pat_site       = pat_site
 
         #maximum range of pattern radar in m                                       
-        grid.max_range = max_range
+        self.max_range  = max_range
 
         #resolution in m                                    
-        grid.res_m     = res  
+        self.res_m      = res  
 
         #resolution in ° 
         #1° = 60 NM = 60*1852 m --> 250m = 1°/(60*1852/250)                                 
-        grid.res_deg   = 1/(60*1852/res)                         
+        self.res_deg    = 1/(60*1852/res)                         
         
         #number of rows and lines in cartesian grid-matrix
-        grid.lon_dim   = int(np.ceil((lon_end-lon_start)/grid.res_deg))    
-        grid.lat_dim   = int(np.ceil((lat_end-lat_start)/grid.res_deg))     
+        self.lon_dim    = shape[0]    
+        self.lat_dim    = shape[1]     
         
-        #save grid parameter object to CartesianGrid-object
-        self.par       = grid
+        #get coordinates of grid boxes in rotated coords
+        lon = np.linspace(self.lon_start, self.lon_end, self.lon_dim)
+        lat = np.linspace(self.lat_start, self.lat_end, self.lat_dim)
+
+        #save coords to object
+        self.rot_coords = np.array((lon,lat))
+
+
+
+
     
-
-
-
-
     ####################################################################
     ### Create index-matrix ###
     ####################################################################
@@ -126,33 +127,35 @@ class CartesianGrid:
 
         #calculate lon-indices of cart. grid boxes for radar data array
         lon_index = np.floor(
-                        (radar.data.lon_rota - self.par.lon_start)\
-                        /self.par.res_deg
+                        (radar.data.lon_rota - self.lon_start)\
+                        /self.res_deg
                         )
 
         #calculate lat-indices of cart. grid boxes for radar data array
         lat_index = np.floor(
-                        (radar.data.lat_rota - self.par.lat_start)\
-                        /self.par.res_deg
+                        (radar.data.lat_rota - self.lat_start)\
+                        /self.res_deg
                         )
         
         #create empty array with shape of cart. grid 
         a_index   = np.empty(
-                        (self.par.lat_dim,self.par.lon_dim),
+                        (self.lat_dim,self.lon_dim),
                         dtype = np.object_
                         )
-
        
         #loop through all radar data points and save their location    
-        for line_nr in range(self.par.lat_dim):
-             for row_nr in range(self.par.lon_dim):
+        for line_nr in range(self.lat_dim):
+             for row_nr in range(self.lon_dim):
                 
                 #find indices of data array, where data lies
-                indices = np.where(np.logical_and(lon_index == row_nr,lat_index == line_nr))
+                indices = np.where(np.logical_and(
+                    lon_index == row_nr,lat_index == line_nr)
+                    )
                 
                 #append loc. of data point to index array entry
                 a_index[line_nr][row_nr] = indices
     
+        #save indices to .dat-file
         a_index.dump(index_matrix_file)
             
         
@@ -177,23 +180,23 @@ class CartesianGrid:
         a_index = np.load(index_matrix_file)
 
         #array with shape of cart. grid for saving interpolated data
-        refl = np.empty((self.par.lat_dim,self.par.lon_dim))
+        refl = np.empty((self.lat_dim,self.lon_dim))
         
         #calculate lon-indices of cart. grid boxes for radar data array
         lon_index = np.floor(
-                        (radar.data.lon_rota - self.par.lon_start)\
-                        /self.par.res_deg
+                        (radar.data.lon_rota - self.lon_start)\
+                        /self.res_deg
                         )
 
         #calculate lat-indices of cart. grid boxes for radar data array
         lat_index = np.floor(
-                        (radar.data.lat_rota - self.par.lat_start)\
-                        /self.par.res_deg
+                        (radar.data.lat_rota - self.lat_start)\
+                        /self.res_deg
                         )
 
         #loop through index matrix
-        for line_nr in range(self.par.lat_dim):
-            for row_nr in range(self.par.lon_dim):
+        for line_nr in range(self.lat_dim):
+            for row_nr in range(self.lon_dim):
                 
                 #get values of radar data array
                 values = radar.data.refl_inc[a_index[line_nr][row_nr]]
@@ -204,7 +207,44 @@ class CartesianGrid:
         #return interpolated reflectivity
         return refl
 
-    
+
+
+
+
+    ####################################################################
+    ### Distance of grid boxes to input location ###
+    ####################################################################
+    def get_distance(self,site):
+
+        '''
+        Calculates the distance (in meters) between a grid box of the 
+        cartesian grid and the input location (usually a radar site, but
+        other locations are also possible.). Input site locations must
+        be in rotated coordinates.
+        1. step: Calculate for lon- and lat-direction respectively the
+            difference in rotated coords between grid box and location.
+        2. step: Transform difference in rotated coordinates to meters.
+        3. step: Use pythagoras to calculate the distance between grid
+            box and site.
+        '''
+
+        #coords of site in lon/lat
+        lon_site = site[0]
+        lat_site = site[1]
+        
+        #get distance in m for lon and lat-direction
+        lon_dist = (self.rot_coords[0] - lon_site)*60*1852
+        lat_dist = (self.rot_coords[1] - lat_site)*60*1852
+
+        #create meshgrid to have all possible combinations
+        lon_dist,lat_dist = np.meshgrid(lon_dist,lat_dist)
+        
+        #calculate distance to radar site for each grid box
+        a_dist = np.sqrt((lon_dist)**2+ (lat_dist)**2)
+       
+        #return distance array
+        return a_dist
+
 
 
 
@@ -217,143 +257,24 @@ class CartesianGrid:
         '''
         Gets a mask of the same shape as the cartesian grid. All grid
         boxes, which are not in the pattern area will be masked.
-        The distance between each grid box to the pattern grid box is
-        calculated. The pattern grid box is the grid box in which the
-        pattern radar is located. A grid box is considered out of range
-        (and thus masked), if the distance between its mid to the mid
-        of the pattern grid box is larger than the pattern range.
+        The distance between each grid box to the pattern site is
+        calculated. A grid box is considered out of range
+        (and thus masked), if the distance between its mid to the 
+        pattern site is larger than the pattern range.
         '''
 
         #create empty array with shape of cart grid for the mask
-        a_mask = np.empty(
-                    (self.par.lat_dim,self.par.lon_dim),
-                    )
+        a_mask = np.empty((self.lat_dim,self.lon_dim))
 
-        #coordinates of radar site in rotated pole coordinates
-        lon_site  = self.par.site[0]
-        lat_site  = self.par.site[1]
-
-        #get lon-index of grid box in which the radar site is located
-        site_lon_index = np.floor(
-            (lon_site - self.par.lon_start) / self.par.res_deg
-            )
-
-        #get lat index of grid box in which the radar site is located
-        site_lat_index = np.floor(
-            (lat_site - self.par.lat_start) / self.par.res_deg
-            )
-        
-        #create numpy array of lon at lat indices of grid boxes
-        lon_index = np.arange(self.par.lon_dim)
-        lat_index = np.arange(self.par.lat_dim)
-
-        #create meshgrid out of grid box indices
-        x_index, y_index = np.meshgrid(lon_index,lat_index)
-
-        #calculate distance to radar site for each grid box
-        dist = np.sqrt(
-              ((site_lon_index-x_index) * self.par.res_m)**2\
-            + ((site_lat_index-y_index) * self.par.res_m)**2
-            )
+        #get distance of grid boxes to pattern site
+        dist = self.get_distance(self.pat_site)
         
         #get mask array
-        a_mask[dist <= self.par.max_range] = False
-        a_mask[dist > self.par.max_range]  = True
-        
+        a_mask[dist <= self.max_range] = False
+        a_mask[dist > self.max_range]  = True
+
         #return mask
         return a_mask
-
-
-
-
-
-    ####################################################################
-    ### Distance of data point to pattern site ###
-    ####################################################################
-    def dist_polar2radar(self,radar,lon,lat):
-        
-        '''
-        calculates the distance (in meters) between a data point 
-        (in rotated pole coords) and the site coords 
-        (also in rotated pole coords). Input: lon/lat of data point in 
-        rotated pole coordinates.
-        '''
-        
-        #difference in lon/lat between data point and site coords
-        lon_diff         = lon - self.par.site[0]
-        lat_diff         = lat - self.par.site[1]
-
-        #calculate lon/lat difference in meter
-        lon_diff_m       = lon_diff*60*1852
-        lat_diff_m       = lat_diff*60*1852
-
-        #get distance
-        distance         = np.sqrt(lon_diff_m**2 + lat_diff_m**2)
-
-        #return distance
-        return distance
-    
-    
-    
-    
-    
-    ####################################################################
-    ### Distance of grid boxes to radar site ###
-    ####################################################################
-    def dist_grid2radar(self,radar):
-
-        '''
-        Calculates the distance (in meters) between a grid box of the 
-        cartesian grid and the radar site. 
-        First, calculates rotated coords of radar site. This can be 
-        transformed to an index of the cartesian grid. -->
-        Index of grid box, in which radar site lies is known.
-        --> Get distance of each grid box to radar site, by multiplying
-        differences in x- and y- indices with the length of a grid box
-        and using pythagoras.        
-        '''
-        
-        #create empty array with shape of cart grid for saving distances
-        a_dist = np.empty(
-                        (self.par.lat_dim,self.par.lon_dim),
-                        )
-
-        #coordinates of radar site in polar coordinates
-        lon_site  = radar.data.lon_site
-        lat_site  = radar.data.lat_site
-        
-        #calculate rotated coords of radar site
-        coords_rot = radar.rotate_pole(
-            np.array(lon_site),np.array(lat_site)
-            ) 
-
-        #get lon-index of grid box in which the radar site is located
-        lon_index = np.floor(
-                        (coords_rot[0][0] - self.par.lon_start)\
-                        /self.par.res_deg
-                        )
-
-        #get lat index of grid box in which the radar site is located
-        lat_index = np.floor(
-                        (coords_rot[0][1] - self.par.lat_start)\
-                        /self.par.res_deg
-                        )
-
-        #loop through cartesian grid, calc distance for each grid box
-        for line_nr in range(self.par.lat_dim):
-            for row_nr in range(self.par.lon_dim):
-                
-                #calc dist in y- and x-axis between site and grid box
-                lon_dist = (lon_index - line_nr)*self.par.res_m
-                lat_dist = (lat_index - row_nr)*self.par.res_m
-
-                #calc dist between site and grid box using pythagoras
-                a_dist[line_nr][row_nr] = np.sqrt(
-                    lon_dist**2 + lat_dist**2
-                    )
-       
-        #return distance array
-        return a_dist
 
 
 
@@ -377,82 +298,79 @@ class CartesianGrid:
         ################################################################
         
         '''
-        prepares plot by defining labling lists, ticks, cmaps etc 
+        prepares plot by defining labling lists, ticks, mask,cmap etc 
         '''
         
         #getting rot. lon-coords of grid lines to be labeled
         lon_plot = np.around(
-                    np.linspace(
-                        self.par.lon_start,
-                        self.par.lon_end,
-                        num = tick_nr
-                               ),decimals = 2
-                            )
+            np.linspace(self.lon_start, self.lon_end, num=tick_nr),
+            decimals=2
+            )
                              
         #getting rot. lat-coords of grid lines to be labeled                        
         lat_plot = np.around(
-                    np.linspace(
-                        self.par.lat_start,
-                        self.par.lat_end,
-                        num = tick_nr
-                               ),decimals = 2
-                            )
-        
-        #maximum number of grid lines (lon_dim = lat_dim)
-        ticks    = self.par.lon_dim
-        
+            np.linspace(self.lat_start, self.lat_end, num=tick_nr),
+            decimals=2
+            )
+
         #create colormap for plot (continously changing colormap)                                                                    
-        cmap     = mcolors.LinearSegmentedColormap.from_list(
-                   'my colormap',['white','blue','red','magenta']
-                   )    
+        cmap = lsc.from_list(
+            'my colormap',['white','blue','red','magenta']
+            )    
         
+        #colormap for mask
+        cm_mask = lsc.from_list('cm_mask',['grey','grey'])
+
+        #get mask for grid boxes outside of pattern range
+        mask = self.get_mask()         
+      
+        #create masked array
+        masked_refl = ma.masked_array(refl, mask=mask)
         
+        #reverse array, since matplotlib.imshow plots reversed
+        masked_refl = masked_refl[::-1]
+
         
-        
-        
+
+
+
         ################################################################
         ### plot data ###
         ################################################################
         
         '''
         Plots interpolated radar data on the new cartesian grid using 
-        seaborn.
+        imshow.
         '''
         
-        #create heatmap  
-        mask = self.get_mask()         
+        #create subplot
+        fig,ax = plt.subplots()
+
+        #create imshow plot
+        plt.imshow(refl[::-1],cmap=cmap)                  
         
-        #create seaborn plot
-        ax =  sb.heatmap(
-            refl, mask = mask,vmin = 5, vmax = 70, cmap = cmap
-            )                  
-        
-        #x- and y-tick positions
-        ax.set_xticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
-        ax.set_yticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
-        
-        #x- and y-tick labels
-        ax.set_xticklabels(lon_plot,fontsize = 16)                                        
-        ax.set_yticklabels(lat_plot,fontsize = 16,rotation='horizontal')                                        
-        
-        #label colorbar
-        ax.collections[0].colorbar.set_label('reflectivity [dbz]',
-            fontsize=18
-            )
-            
-        #change tick size of colorbar
-        ax.collections[0].colorbar.ax.tick_params(labelsize = 18)
+        #colorbar
+        cb = plt.colorbar()
+        cb.set_label('reflectivity [dbz]',fontsize=18)
+        cb.ax.tick_params(labelsize=16)
+
+        #put mask on picture
+        plt.imshow(mask,cmap=cm_mask)
+
+        #set ticks
+        ax.set_xticks(np.linspace(0,self.lon_dim-1,num=tick_nr))                
+        ax.set_yticks(np.linspace(0,self.lat_dim-1,num=tick_nr))                
        
+        #set labels
+        ax.set_xticklabels(lon_plot,fontsize=16)
+        ax.set_yticklabels(lat_plot,fontsize=16,rotation='horizontal')
+
         #grid
-        ax.xaxis.grid(True, which='major', color = 'k')                                
-        ax.yaxis.grid(True, which='major', color = 'k')
-        
-        #put grid in front of data                        
-        ax.set_axisbelow(False)  
-        
+        ax.grid(color='k')
+  
         #label x- and y-axis                                                  
-        plt.xlabel('r_lon', fontsize = 18)                                    
-        plt.ylabel('r_lat', fontsize = 18)    
+        plt.xlabel('r_lon',fontsize=18)                                    
+        plt.ylabel('r_lat',fontsize=18)    
         
         #title 
         plt.title(                                   \
@@ -463,9 +381,9 @@ class CartesianGrid:
                   + str(radar.data.time_end.time())  \
                   +'\n'                              \
                   + str(radar.data.time_end.date()),
-                  fontsize = 20
+                  fontsize=20
                  )   
-        
+      
         #show  
         plt.show()                                                                
         
@@ -499,89 +417,108 @@ class CartesianGrid:
 
         #getting rot. lon-coords of grid lines to be labeled
         lon_plot = np.around(
-                    np.linspace(
-                        self.par.lon_start,
-                        self.par.lon_end,
-                        num = tick_nr
-                               ),decimals = 2
-                            )
+            np.linspace(self.lon_start,self.lon_end,num=tick_nr),
+            decimals=2
+            )
                              
         #getting rot. lat-coords of grid lines to be labeled                        
         lat_plot = np.around(
-                    np.linspace(
-                        self.par.lat_start,
-                        self.par.lat_end,
-                        num = tick_nr
-                               ),decimals = 2
-                            )
+            np.linspace(self.lat_start,self.lat_end,num=tick_nr),
+            decimals=2
+            )
         
-        #maximum number of grid lines (lon_dim = lat_dim)
-        ticks = self.par.lon_dim
+        #get the mask for grid boxes outside of pattern range
+        mask = self.get_mask()
+
+        #create masked array
+        masked_refl_diff = ma.masked_array(refl_diff,mask)
         
-        
-        
-        
-        
+        #reverse masked array, since matplotlib plots reversed        
+        masked_refl_diff = masked_refl_diff[::-1]
+
+        #create colormap for the mask
+        colors = ['grey','grey']
+        cmap   = lsc.from_list('cm_mask',colors)
+
+        mask1= np.zeros((self.lat_dim,self.lon_dim)) 
+        mask1[mask == False] = np.NaN
+        #mask[mask == True] = 1
+       # print(mask1)
+
+
+
+
         ################################################################
         ### actual plot ###
         ################################################################
                 
         '''
-        Plots difference matrix on the new cartesian grid using seaborn.
+        Plots difference array on the new cartesian grid using imshow.
         '''
         
         #create subplot
         fig,ax = plt.subplots() 
         
         #create heatmap                                                                                                              
-        sb.heatmap(refl_diff,vmin = -70, vmax = 70,cmap = 'bwr')                  
-        
-        #x- and y-tick positions
-        ax.set_xticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
-        ax.set_yticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
-        
-        #x- and y-tick labels
-        ax.set_xticklabels(lon_plot,fontsize = 16)                                        
-        ax.set_yticklabels(lat_plot,fontsize = 16,rotation='horizontal')                                        
-        
-        #grid
-        ax.xaxis.grid(True, which='major',color = 'k')                                
-        ax.yaxis.grid(True, which='major',color = 'k')
-        
-        #put grid in front of data                        
-        ax.set_axisbelow(False)  
-        
-        #label x- and y-axis                                                  
-        plt.xlabel('r_lon', fontsize = 18)                                    
-        plt.ylabel('r_lat', fontsize = 18)    
+        plt.imshow(masked_refl_diff,vmin=-70,vmax=70,cmap='bwr',zorder=1)      
+      
+        #colorbar
+        cb = plt.colorbar()
+        cb.set_label('reflectivity [dbz]',fontsize=18)
+        cb.ax.tick_params(labelsize=16)
         
         #plot isolines, if wished
         if log_iso == True:
             
+            #create masked array
+            l_refl1 = ma.masked_array(l_refl[0],mask=mask)
+            l_refl2 = ma.masked_array(l_refl[1],mask=mask)
+           
             #contours around rain-areas
-            contour1 = measure.find_contours(l_refl[0][::-1], rain_th)
-            contour2 = measure.find_contours(l_refl[1][::-1], rain_th)
+            contour1 = measure.find_contours(l_refl1[::-1],rain_th)
+            contour2 = measure.find_contours(l_refl2[::-1],rain_th)
         
             #plot contours of radar1
             for n, contour in enumerate(contour1):
-                ax.plot(contour[:,1], contour[:,0], linewidth=1, 
-                    color = 'b', label = 'dwd'
+               plt.plot(
+                    contour[:,1],contour[:,0],linewidth=1,color='b',
+                    label='dwd',zorder=2
                     )
             
             #plot contours of radar2
             for n, contour in enumerate(contour2):
-                ax.plot(contour[:,1],contour[:,0], linewidth=1, 
-                    color='r',label = 'pattern'
+                plt.plot(
+                    contour[:,1],contour[:,0],linewidth=1,color='r',
+                    label='pattern',zorder=3
                     )
-            
+
+            plt.imshow(mask1[::-1],cmap=cmap,zorder=4)
+           
             #remove all labels except one of each radar
             lines = ax.get_lines()
             for line in lines[1:-1]:
                 line.set_label('')
         
+            
             #legend
-            plt.legend(fontsize = 16)
+            plt.legend(fontsize=16)
         
+        
+        #x- and y-tick positions
+        ax.set_xticks(np.linspace(0,self.lon_dim-1,num=tick_nr))                
+        ax.set_yticks(np.linspace(0,self.lat_dim-1,num=tick_nr))                
+        
+        #x- and y-tick labels
+        ax.set_xticklabels(lon_plot,fontsize= 16)                                        
+        ax.set_yticklabels(lat_plot,fontsize=16,rotation='horizontal')                                        
+        
+        #grid
+        ax.grid(color='k')
+
+        #label x- and y-axis                                                  
+        plt.xlabel('r_lon', fontsize=18)                                    
+        plt.ylabel('r_lat', fontsize=18)    
+
         #title                           
         plt.title(
                   radar2.name +                                     \
@@ -591,7 +528,7 @@ class CartesianGrid:
                   + '(' + str(radar1.data.time_start.time()) + ' - '\
                   + str(radar1.data.time_end.time()) + ')\n'        \
                   +str(radar1.data.time_end.date()),
-                  fontsize = 20
+                  fontsize=20
                   )
         
         #show  
@@ -619,32 +556,37 @@ class CartesianGrid:
         ################################################################
         
         '''
-        prepares plot by defining labling lists etc. 
+        prepares plot by defining labling lists, masks etc. 
         '''
-        
-        
+
         #getting rot. lon-coords of grid lines to be labeled
         lon_plot = np.around(
-                    np.linspace(
-                        self.par.lon_start,
-                        self.par.lon_end,
-                        num = tick_nr
-                               ),decimals = 2
-                            )
-                             
+            np.linspace(self.lon_start,self.lon_end,num=tick_nr), 
+            decimals=2
+            )
+
         #getting rot. lat-coords of grid lines to be labeled                        
         lat_plot = np.around(
-                    np.linspace(
-                        self.par.lat_start,
-                        self.par.lat_end,
-                        num = tick_nr
-                               ),decimals = 2
-                            )
-        
-        #maximum number of grid lines (lon_dim = lat_dim)
-        ticks = self.par.lon_dim
+            np.linspace(self.lat_start,self.lat_end,num=tick_nr),
+            decimals=2
+            )
 
+        #get mask for grid boxes outside of pattern range
+        mask = self.get_mask()
 
+        #create masked array for plot
+        masked_height = ma.masked_array(heights,mask=mask)
+       
+        #reverse masked_height, since imshow plots reversed
+        masked_height = masked_height[::-1]
+
+        #create colormap for the mask
+        colors = ['grey','grey']
+        cmap   = lsc.from_list('cm_mask',colors)
+        colors2 = ['white','grey']
+        cmap2   = lsc.from_list('cm_mask2',colors2)
+        mask1 = np.zeros((self.lat_dim,self.lon_dim))
+        mask1[mask==False] = np.NaN
 
 
 
@@ -653,51 +595,50 @@ class CartesianGrid:
         ################################################################
                 
         '''
-        Plots heights of radar beam as isolines on the cartesian grid
+        Plots heights of radar beam as isolines on the cartesian grid.
         '''
 
         #create subplot
-        fig,ax = plt.subplots(figsize=(8,8)) 
+        fig,ax = plt.subplots() 
+  
+        #plot the contours
+        CS = plt.contour(
+            np.arange(self.lon_dim),np.arange(self.lat_dim), 
+            masked_height,isolines,colors='k'
+            )
 
-        #x- and y-tick positions
-        ax.set_xticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
-        ax.set_yticks(np.linspace(0,ticks,num=tick_nr), minor = False)                
+        #plot the mask
+        #plt.contourf(np.arange(self.lat_dim),np.arange(self.lon_dim),
+        #mask[::-1],cmap=cmap2)
+
+        #ax.set_axisbelow(False)
+
+        plt.imshow(mask1[::-1],cmap = cmap)
         
-        #x- and y-tick labels
-        ax.set_xticklabels(lon_plot,fontsize = 16)                                        
-        ax.set_yticklabels(lat_plot,fontsize = 16,rotation='horizontal')                                        
+        #label the contours
+        plt.clabel(CS,fontsize=9,fmt='%1.0f')
+
+        #set ticks
+        ax.set_xticks(np.linspace(0,self.lon_dim-1,num=tick_nr))                
+        ax.set_yticks(np.linspace(0,self.lat_dim-1,num=tick_nr))                
+       
+        #set labels
+        ax.set_xticklabels(lon_plot,fontsize=16)
+        ax.set_yticklabels(lat_plot,fontsize=16,rotation='horizontal')
         
         #grid
-        ax.xaxis.grid(True, which='major',color = 'k')                                
-        ax.yaxis.grid(True, which='major',color = 'k')
-        
-        #put grid in front of data                        
-        ax.set_axisbelow(False)  
-        
-        #label x- and y-axis                                                  
-        plt.xlabel('r_lon', fontsize = 18)                                    
-        plt.ylabel('r_lat', fontsize = 18)    
-        
-        #contours of heights
-        for isoline in isolines:
+        ax.grid(color='k')
+        ax.set_axisbelow(False) 
 
-            #find contours
-            contours = measure.find_contours(heights, isoline)
-       
-            #plot contours
-            for n, contour in enumerate(contours):
-                ax.plot(contour[:,1], contour[:,0], linewidth=1, 
-                    color = 'b'
-                    )
-        
-        #legend
-        plt.legend(fontsize = 16)
-    
+        #label x- and y-axis                                                  
+        plt.xlabel('r_lon',fontsize=18)                                    
+        plt.ylabel('r_lat',fontsize=18)    
+
         #title                           
-        plt.title(
-                  radar.name + ' - heights',
-                  fontsize = 20
-                  )
+        plt.title(radar.name+' - heights',fontsize=20)
+        
+        #prevent parts of picture to be cut off
+        plt.tight_layout()
 
         #show plot
         plt.show()

@@ -25,7 +25,6 @@ from MasterModule.DWDRadar import Dwd
 from MasterModule.PatternRadar import Pattern
 from MasterModule.RadarData import RadarData
 from MasterModule.CartesianGrid import CartesianGrid
-from MasterModule.GridParameter import GridParameter
 
 
 
@@ -245,11 +244,11 @@ for radar in radars:
     #the name of the file
     index_matrix_file =  './index_matrix/index_matrix_'     \
                             +str(radar.name)+'_'            \
-                            +str(car_grid.par.lon_start)+'_'\
-                            +str(car_grid.par.lon_end)+'_'  \
-                            +str(car_grid.par.lat_start)+'_'\
-                            +str(car_grid.par.lat_end)+'_'  \
-                            +str(car_grid.par.res_m)+'_'    \
+                            +str(car_grid.lon_start)+'_'\
+                            +str(car_grid.lon_end)+'_'  \
+                            +str(car_grid.lat_start)+'_'\
+                            +str(car_grid.lat_end)+'_'  \
+                            +str(car_grid.res_m)+'_'    \
                             +str(radar.res_fac)+'_'         \
                             +str(offset)+'.dat'
 	
@@ -286,7 +285,7 @@ for radar in radars:
     
     #append inverted reflectivity matrix to list
     #mirror columns --> matplotlib plots the data exactly mirrored
-    l_refl.append(refl[::-1])
+    l_refl.append(refl)
     
 
 

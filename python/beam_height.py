@@ -87,13 +87,21 @@ Calculates the height of the beam for each grid box of cartesian grid.
 #create Cartesian Grid object
 car_grid = CartesianGrid(grid_par)
 
+#coordinates of radar site
+site = (radar.data.lon_site,radar.data.lat_site)
+
+#transform site coords to rotated pole coords
+rot_site = radar.rotate_pole(np.array(site[0]), np.array(site[1]))
+
+#bring rot_site to correct shape
+rot_site = (rot_site[0][0], rot_site[0][1])
+
 #get distance of grid box to radar site 
-a_dist = car_grid.dist_grid2radar(radar)
+a_dist = car_grid.get_distance(rot_site)
 
 #get height of radar beam at each grid box
 heights = wradlib.georef.beam_height_n(a_dist,radar.data.ele)
 
-print(heights.shape)
 
 
 

@@ -205,11 +205,11 @@ and cartesian grid. If not, call method to create it.
 #the name of the file
 index_matrix_file =  './index_matrix/index_matrix_'     \
                         +str(radar.name)+'_'            \
-                        +str(car_grid.par.lon_start)+'_'\
-                        +str(car_grid.par.lon_end)+'_'  \
-                        +str(car_grid.par.lat_start)+'_'\
-                        +str(car_grid.par.lat_end)+'_'  \
-                        +str(car_grid.par.res_m)+'_'    \
+                        +str(car_grid.lon_start)+'_'\
+                        +str(car_grid.lon_end)+'_'  \
+                        +str(car_grid.lat_start)+'_'\
+                        +str(car_grid.lat_end)+'_'  \
+                        +str(car_grid.res_m)+'_'    \
                         +str(radar.res_fac)+'_'         \
                         +str(offset)+'.dat'
 
@@ -243,7 +243,7 @@ refl                 = car_grid.data2grid(index_matrix_file,radar)
 refl[refl < rain_th] = rain_th
 
 #mirror columns --> matplotlib plots the data exactly mirrored
-refl                 = refl[::-1]
+refl                 = refl
 
 
 
