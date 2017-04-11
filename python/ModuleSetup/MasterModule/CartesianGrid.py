@@ -264,7 +264,7 @@ class CartesianGrid:
         '''
 
         #create empty array with shape of cart grid for the mask
-        a_mask = np.empty((self.lat_dim,self.lon_dim))
+        a_mask = np.empty((self.lat_dim,self.lon_dim),dtype = bool)
 
         #get distance of grid boxes to pattern site
         dist = self.get_distance(self.pat_site)
@@ -298,7 +298,7 @@ class CartesianGrid:
         ################################################################
         
         '''
-        prepares plot by defining labling lists, ticks, mask,cmap etc 
+        prepares plot by defining labling lists, ticks, mask, cmap etc. 
         '''
         
         #getting rot. lon-coords of grid lines to be labeled
@@ -319,18 +319,12 @@ class CartesianGrid:
             )    
         
         #colormap for mask
-        cm_mask = lsc.from_list('cm_mask',['grey','grey'])
+        cm_mask = lsc.from_list('cm_mask',['#00000000','grey'])
 
         #get mask for grid boxes outside of pattern range
         mask = self.get_mask()         
       
-        #create masked array
-        masked_refl = ma.masked_array(refl, mask=mask)
-        
-        #reverse array, since matplotlib.imshow plots reversed
-        masked_refl = masked_refl[::-1]
 
-        
 
 
 
@@ -347,16 +341,16 @@ class CartesianGrid:
         fig,ax = plt.subplots()
 
         #create imshow plot
-        plt.imshow(refl[::-1],cmap=cmap)                  
+        plt.imshow(refl[::-1],cmap=cmap,zorder=1)                  
         
         #colorbar
         cb = plt.colorbar()
         cb.set_label('reflectivity [dbz]',fontsize=18)
         cb.ax.tick_params(labelsize=16)
-
-        #put mask on picture
-        plt.imshow(mask,cmap=cm_mask)
-
+        
+        #plot the mask
+        plt.imshow(mask[::-1],cmap =cm_mask,zorder=2)
+        
         #set ticks
         ax.set_xticks(np.linspace(0,self.lon_dim-1,num=tick_nr))                
         ax.set_yticks(np.linspace(0,self.lat_dim-1,num=tick_nr))                
@@ -367,7 +361,8 @@ class CartesianGrid:
 
         #grid
         ax.grid(color='k')
-  
+        ax.set_axisbelow(False)
+
         #label x- and y-axis                                                  
         plt.xlabel('r_lon',fontsize=18)                                    
         plt.ylabel('r_lat',fontsize=18)    
@@ -430,20 +425,10 @@ class CartesianGrid:
         #get the mask for grid boxes outside of pattern range
         mask = self.get_mask()
 
-        #create masked array
-        masked_refl_diff = ma.masked_array(refl_diff,mask)
-        
-        #reverse masked array, since matplotlib plots reversed        
-        masked_refl_diff = masked_refl_diff[::-1]
-
         #create colormap for the mask
-        colors = ['grey','grey']
+        colors = ['#00000000','grey']
         cmap   = lsc.from_list('cm_mask',colors)
-
-        mask1= np.zeros((self.lat_dim,self.lon_dim)) 
-        mask1[mask == False] = np.NaN
-        #mask[mask == True] = 1
-       # print(mask1)
+        
 
 
 
@@ -460,50 +445,49 @@ class CartesianGrid:
         fig,ax = plt.subplots() 
         
         #create heatmap                                                                                                              
-        plt.imshow(masked_refl_diff,vmin=-70,vmax=70,cmap='bwr',zorder=1)      
-      
+        plt.imshow(refl_diff[::-1],vmin=-70,vmax=70,cmap='bwr',zorder=1)      
+        
         #colorbar
         cb = plt.colorbar()
         cb.set_label('reflectivity [dbz]',fontsize=18)
         cb.ax.tick_params(labelsize=16)
         
-        #plot isolines, if wished
+        #plot isolines around rain areas, if wished
         if log_iso == True:
             
-            #create masked array
-            l_refl1 = ma.masked_array(l_refl[0],mask=mask)
-            l_refl2 = ma.masked_array(l_refl[1],mask=mask)
-           
             #contours around rain-areas
-            contour1 = measure.find_contours(l_refl1[::-1],rain_th)
-            contour2 = measure.find_contours(l_refl2[::-1],rain_th)
+            contour1 = measure.find_contours(l_refl[0][::-1],rain_th)
+            contour2 = measure.find_contours(l_refl[1][::-1],rain_th)
         
             #plot contours of radar1
             for n, contour in enumerate(contour1):
                plt.plot(
                     contour[:,1],contour[:,0],linewidth=1,color='b',
-                    label='dwd',zorder=2
+                    label='dwd',
                     )
             
             #plot contours of radar2
             for n, contour in enumerate(contour2):
                 plt.plot(
                     contour[:,1],contour[:,0],linewidth=1,color='r',
-                    label='pattern',zorder=3
+                    label='pattern',
                     )
-
-            plt.imshow(mask1[::-1],cmap=cmap,zorder=4)
-           
+            
+            #put mask in front of data
+            plt.imshow(mask[::-1],cmap=cmap,zorder=2)
+            
             #remove all labels except one of each radar
             lines = ax.get_lines()
             for line in lines[1:-1]:
                 line.set_label('')
         
-            
             #legend
             plt.legend(fontsize=16)
         
-        
+        #grid
+        ax.grid(color='k')
+        ax.set_axisbelow(False)
+       
         #x- and y-tick positions
         ax.set_xticks(np.linspace(0,self.lon_dim-1,num=tick_nr))                
         ax.set_yticks(np.linspace(0,self.lat_dim-1,num=tick_nr))                
@@ -512,9 +496,6 @@ class CartesianGrid:
         ax.set_xticklabels(lon_plot,fontsize= 16)                                        
         ax.set_yticklabels(lat_plot,fontsize=16,rotation='horizontal')                                        
         
-        #grid
-        ax.grid(color='k')
-
         #label x- and y-axis                                                  
         plt.xlabel('r_lon', fontsize=18)                                    
         plt.ylabel('r_lat', fontsize=18)    
@@ -541,10 +522,10 @@ class CartesianGrid:
     ####################################################################
     ### plot heights ###
     ####################################################################
-    def plot_heights(self,heights,isolines,tick_nr,radar):
+    def plot_heights(self,heights,isolines,tick_nr,title):
 
         '''
-        Plots heights of radar beam as isolines
+        Plots heights of radar beam as isolines.
         '''
     
 
@@ -576,17 +557,12 @@ class CartesianGrid:
 
         #create masked array for plot
         masked_height = ma.masked_array(heights,mask=mask)
-       
-        #reverse masked_height, since imshow plots reversed
-        masked_height = masked_height[::-1]
 
         #create colormap for the mask
-        colors = ['grey','grey']
+        colors = ['#00000000','grey']
         cmap   = lsc.from_list('cm_mask',colors)
-        colors2 = ['white','grey']
-        cmap2   = lsc.from_list('cm_mask2',colors2)
-        mask1 = np.zeros((self.lat_dim,self.lon_dim))
-        mask1[mask==False] = np.NaN
+       
+
 
 
 
@@ -604,17 +580,12 @@ class CartesianGrid:
         #plot the contours
         CS = plt.contour(
             np.arange(self.lon_dim),np.arange(self.lat_dim), 
-            masked_height,isolines,colors='k'
+            masked_height[::-1],isolines,colors='k',zorder=1
             )
 
         #plot the mask
-        #plt.contourf(np.arange(self.lat_dim),np.arange(self.lon_dim),
-        #mask[::-1],cmap=cmap2)
-
-        #ax.set_axisbelow(False)
-
-        plt.imshow(mask1[::-1],cmap = cmap)
-        
+        plt.imshow(mask[::-1],cmap=cmap,zorder=2)
+       
         #label the contours
         plt.clabel(CS,fontsize=9,fmt='%1.0f')
 
