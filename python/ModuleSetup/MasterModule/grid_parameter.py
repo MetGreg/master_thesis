@@ -1,3 +1,13 @@
+###GridParameter class
+
+'''
+This file is reserved for the GridParameter class
+'''
+
+
+
+
+
 ########################################################################
 ### class for saving cartesian grid parameters ###
 ########################################################################

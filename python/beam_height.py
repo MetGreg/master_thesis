@@ -19,10 +19,10 @@ import re
 import parameters as par                     
 import wradlib  
 import numpy as np                             
-from MasterModule.MainRadar     import Radar 
-from MasterModule.DWDRadar      import Dwd   
-from MasterModule.PatternRadar  import Pattern
-from MasterModule.CartesianGrid import CartesianGrid 
+from MasterModule.main_radar     import Radar 
+from MasterModule.dwd_radar      import Dwd   
+from MasterModule.pattern_radar  import Pattern
+from MasterModule.cartesian_grid import CartesianGrid 
 
 
 
@@ -114,5 +114,6 @@ heights = wradlib.georef.beam_height_n(a_dist,radar.data.ele)
 Plots heights of radar beam as isolines.
 '''
 
+title = str(radar.name) + ' - heights'
 #plot heights
-car_grid.plot_heights(heights,isolines,tick_nr,radar)
+car_grid.plot_heights(heights,isolines,tick_nr,title)

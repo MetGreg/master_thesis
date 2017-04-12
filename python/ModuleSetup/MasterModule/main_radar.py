@@ -1,6 +1,8 @@
-########################################################################
-### main Radar-Object ###
-########################################################################
+###MainRadar class
+
+'''
+This file is reserved for the MainRadar class.
+'''
 
 
 
@@ -9,6 +11,11 @@
 ########################################################################
 ### modules ###
 ########################################################################
+
+'''
+Import all modules needed for this class.
+'''
+
 import wradlib
 import cartopy.crs as ccrs
 import numpy as np

@@ -1,6 +1,8 @@
-########################################################################
-### class for saving general radar properties ###
-########################################################################
+###RadarData class
+
+'''
+This file is reserved for the RadarData class
+'''
 
 
 
@@ -9,6 +11,11 @@
 ########################################################################
 ### modules ###
 ########################################################################
+
+'''
+Import all modules needed for this class.
+'''
+
 import numpy as np
 from datetime import datetime
 
@@ -17,7 +24,7 @@ from datetime import datetime
 
 
 ########################################################################
-### Radardata class ###
+### RadarData class ###
 ########################################################################
 class RadarData:
     

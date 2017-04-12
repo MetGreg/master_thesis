@@ -449,8 +449,8 @@ class CartesianGrid:
         
         #colorbar
         cb = plt.colorbar()
-        cb.set_label('reflectivity [dbz]',fontsize=18)
-        cb.ax.tick_params(labelsize=16)
+        cb.set_label('reflectivity [dbz]',fontsize=20)
+        cb.ax.tick_params(labelsize=18)
         
         #plot isolines around rain areas, if wished
         if log_iso == True:
@@ -482,7 +482,7 @@ class CartesianGrid:
                 line.set_label('')
         
             #legend
-            plt.legend(fontsize=16)
+            plt.legend(fontsize=18)
         
         #grid
         ax.grid(color='k')
@@ -493,12 +493,12 @@ class CartesianGrid:
         ax.set_yticks(np.linspace(0,self.lat_dim-1,num=tick_nr))                
         
         #x- and y-tick labels
-        ax.set_xticklabels(lon_plot,fontsize= 16)                                        
-        ax.set_yticklabels(lat_plot,fontsize=16,rotation='horizontal')                                        
+        ax.set_xticklabels(lon_plot,fontsize=18)                                        
+        ax.set_yticklabels(lat_plot,fontsize=18,rotation='horizontal')                                        
         
         #label x- and y-axis                                                  
-        plt.xlabel('r_lon', fontsize=18)                                    
-        plt.ylabel('r_lat', fontsize=18)    
+        plt.xlabel('r_lon', fontsize=20)                                    
+        plt.ylabel('r_lat', fontsize=20)    
 
         #title                           
         plt.title(
@@ -509,7 +509,7 @@ class CartesianGrid:
                   + '(' + str(radar1.data.time_start.time()) + ' - '\
                   + str(radar1.data.time_end.time()) + ')\n'        \
                   +str(radar1.data.time_end.date()),
-                  fontsize=20
+                  fontsize=24
                   )
         
         #show  
@@ -587,26 +587,26 @@ class CartesianGrid:
         plt.imshow(mask[::-1],cmap=cmap,zorder=2)
        
         #label the contours
-        plt.clabel(CS,fontsize=9,fmt='%1.0f')
+        plt.clabel(CS,fontsize=18,fmt='%1.0f')
 
         #set ticks
         ax.set_xticks(np.linspace(0,self.lon_dim-1,num=tick_nr))                
         ax.set_yticks(np.linspace(0,self.lat_dim-1,num=tick_nr))                
        
         #set labels
-        ax.set_xticklabels(lon_plot,fontsize=16)
-        ax.set_yticklabels(lat_plot,fontsize=16,rotation='horizontal')
+        ax.set_xticklabels(lon_plot,fontsize=18)
+        ax.set_yticklabels(lat_plot,fontsize=18,rotation='horizontal')
         
         #grid
         ax.grid(color='k')
         ax.set_axisbelow(False) 
 
         #label x- and y-axis                                                  
-        plt.xlabel('r_lon',fontsize=18)                                    
-        plt.ylabel('r_lat',fontsize=18)    
+        plt.xlabel('r_lon',fontsize=20)                                    
+        plt.ylabel('r_lat',fontsize=20)    
 
         #title                           
-        plt.title(radar.name+' - heights',fontsize=20)
+        plt.title(title,fontsize=24)
         
         #prevent parts of picture to be cut off
         plt.tight_layout()

@@ -12,8 +12,8 @@
 import h5py
 import numpy as np
 from datetime import datetime
-from .MainRadar import Radar
-from .RadarData import RadarData
+from .main_radar import Radar
+from .radar_data import RadarData
 
 
 

@@ -1,6 +1,8 @@
-########################################################################
-### sub-class for Pattern-data ###
-########################################################################
+###PatternRadar class
+
+'''
+This file is reserved for the PatternRadar class.
+'''
 
 
 
@@ -9,14 +11,20 @@
 ########################################################################
 ### modules ###
 ########################################################################
+
+'''
+Import all modules needed for this class.
+'''
+
 import numpy as np
 from datetime import datetime
 from netCDF4 import Dataset
-from .MainRadar import Radar
-from .RadarData import RadarData    
+from .main_radar import Radar
+from .radar_data import RadarData    
     
     
     
+
 
 ########################################################################
 ### Pattern Class ###    

@@ -34,12 +34,12 @@ import re
 import seaborn as sb
 import parameters as par
 from pathlib import Path
-from MasterModule.MainRadar import Radar
-from MasterModule.DWDRadar import Dwd
-from MasterModule.PatternRadar import Pattern
-from MasterModule.RadarData import RadarData
-from MasterModule.CartesianGrid import CartesianGrid
-from MasterModule.GridParameter import GridParameter
+from MasterModule.main_radar import Radar
+from MasterModule.dwd_radar import Dwd
+from MasterModule.pattern_radar import Pattern
+from MasterModule.radar_data import RadarData
+from MasterModule.cartesian_grid import CartesianGrid
+from MasterModule.grid_parameter import GridParameter
 
 
     
