@@ -1,7 +1,7 @@
 ###RadarData class
 
 '''
-This file is reserved for the RadarData class
+This file is reserved for the RadarData class.
 '''
 
 
@@ -16,6 +16,7 @@ This file is reserved for the RadarData class
 Import all modules needed for this class.
 '''
 
+#python modules
 import numpy as np
 from datetime import datetime
 
@@ -335,67 +336,7 @@ class RadarData:
     
     
     
-    
-   
-    ####################################################################
-    ### longitude coordinates in rotated pole coordinates ###
-    ####################################################################
-    @property
-    def lon_rota(self):
-        
-        '''
-        Longitude coordinates of data points in rotated pole coordinate 
-        system. Must be 2D numpy array.
-        '''
-        
-        try:
-            return self._lon_rota
-        except AttributeError:
-            return 0
-        
             
-    @lon_rota.setter
-    def lon_rota(self, new_lon_rota):
-        assert isinstance(new_lon_rota, np.ndarray),\
-                'new lon_rota is no numpy array'
-        assert len(new_lon_rota.shape) == 2,\
-                'new lon_rota is not 2-dimensional'
-        self._lon_rota = new_lon_rota
-        
-    
-    
-    
-    
-    
-    ####################################################################
-    ### latitude coordinates in rotated pole coordinates ###
-    ####################################################################
-    @property
-    def lat_rota(self):
-        
-        '''
-        Latitude coordinates of data points in rotated pole coordinate 
-        system. Must be 2D numpy array.
-        '''
-        
-        try:
-            return self._lat_rota
-        except AttributeError:
-            return 0
-        
-            
-    @lat_rota.setter
-    def lat_rota(self, new_lat_rota):
-        assert isinstance(new_lat_rota, np.ndarray),\
-                'new lat_rota is no numpy array'
-        assert len(new_lat_rota.shape) == 2,\
-                'new lat_rota is not 2-dimensional'
-        self._lat_rota = new_lat_rota
-        
-        
-        
-        
-        
     ####################################################################
     ### reflectivity data ###
     ####################################################################    

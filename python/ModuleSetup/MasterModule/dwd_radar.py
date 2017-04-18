@@ -1,6 +1,8 @@
-########################################################################
-### sub-class for Dwd-data ###
-########################################################################
+#DwdRadar class
+
+'''
+This file is reserved for the DwdRadar class.
+'''
 
 
 
@@ -9,9 +11,17 @@
 ########################################################################
 ### import modules ###
 ########################################################################
+
+'''
+Imports all modules needed for this class.
+'''
+
+#python modules
 import h5py
 import numpy as np
 from datetime import datetime
+
+#MasterModule
 from .main_radar import Radar
 from .radar_data import RadarData
 
@@ -22,27 +32,32 @@ from .radar_data import RadarData
 ########################################################################
 ### dwd class ###
 ########################################################################
-class Dwd(Radar):
+class DwdRadar(Radar):
     
     '''
-    Sub-Object of Radar. Contains all methods that are specific designed
-    for Dwd-data.
+    DwdRadar class. Contains all methods that are specific designed
+    for Dwd-data. Inherits from Radar.
     '''
     
+
+
+
     
     ####################################################################
     ### Initialization - method ###
     ####################################################################
-    def __init__(self,file_name,res_fac):
+    def __init__(self,radar_par):
         
         '''
-        Save name of radar to object
+        Save name of radar to object and call super class.
         '''
+        
+        #call init method of super class
+        super().__init__(radar_par)
 
-        self.name      = 'dwd'         #name of radar
-        self.file_name = file_name     #name of data file
-        self.res_fac   = res_fac       #factor to inc. azi. res
-    
+        #save name of radar to object
+        self.name = 'dwd'         
+        
     
     
 
@@ -74,7 +89,7 @@ class Dwd(Radar):
             ############################################################
             
             '''
-            reads in radar data
+            Reads in radar data.
             '''
 
             #lon/lat coordinates of radar site
@@ -93,7 +108,7 @@ class Dwd(Radar):
             r_bins       = h5py_file.get('dataset1/where')\
                             .attrs['nbins']
 
-            #azimuth angle of first measurement
+            #azimuth angle of first measurement(take care of 360 --> 0°)
             azi_start    = (h5py_file.get('dataset1/where')\
                             .attrs['startaz'] + 360) % 360
             
@@ -110,20 +125,16 @@ class Dwd(Radar):
  
             #azi coords of data pts (near edge of grid box)
             azi_coords   = np.arange(
-                                azi_start,
-                                azi_steps*azi_rays + azi_start,
-                                azi_steps
-                                )  
+                azi_start,azi_steps*azi_rays + azi_start,azi_steps
+                )  
 
             #take care of transition from 360 to 0
             azi_coords   = (azi_coords + 360) % 360
             
             #range coords of data pts in [m] (far edge of grid cell) 
             range_coords = np.arange(
-                                r_start+r_steps,
-                                r_steps*r_bins +r_start+r_steps,
-                                r_steps
-                                )  
+                r_start+r_steps,r_steps*r_bins +r_start+r_steps,r_steps
+                )  
             
             #factor to correct the dwd refl to ordinary dbz values      
             gain         = h5py_file.get('dataset1/data1/what')\
@@ -152,51 +163,51 @@ class Dwd(Radar):
             ############################################################
             
             '''
-            saves radar data to object
+            Saves radar data to object.
             '''
 
             #lon/lat coordinates of radar site
-            radar_data.lon_site       = lon_site                                               
-            radar_data.lat_site       = lat_site
+            radar_data.lon_site     = lon_site                                               
+            radar_data.lat_site     = lat_site
             
             #elevation of radar beam
-            radar_data.ele            = ele    
+            radar_data.ele          = ele    
 
             #number of azimuth rays(360 --> 1° steps)
-            radar_data.azi_rays       = int(azi_rays)   
+            radar_data.azi_rays     = int(azi_rays)   
 
             #number of radius bins (600 --> 250m steps up to 150000m)                                    
-            radar_data.r_bins         = int(r_bins)                                                
+            radar_data.r_bins       = int(r_bins)                                                
 
             #starting value of azimuth angle
-            radar_data.azi_start      = float(azi_start)
+            radar_data.azi_start    = float(azi_start)
 
             #starting value of range
-            radar_data.r_start        = float(r_start)
+            radar_data.r_start      = float(r_start)
             
             #steps between 2 measurements in azimuth
-            radar_data.azi_steps      = float(azi_steps)
+            radar_data.azi_steps    = float(azi_steps)
 
             #steps between 2 measurements in range
-            radar_data.r_steps        = float(r_steps)
+            radar_data.r_steps      = float(r_steps)
 
             #azi coords of data pts (near edge of grid box)
-            radar_data.azi_coords     = azi_coords
+            radar_data.azi_coords   = azi_coords
             
             #range coords of data pts (far edge of grid cell)
-            radar_data.range_coords   = range_coords
+            radar_data.range_coords = range_coords
 
             #corrected data
-            radar_data.refl           = refl * gain + offset    
+            radar_data.refl         = refl * gain + offset    
 
             #time at which radar scan started in utc                        
-            radar_data.time_start     = time_start 
+            radar_data.time_start   = time_start 
             
             #time at which radar scan ended in utc
-            radar_data.time_end       = time_end
+            radar_data.time_end     = time_end
                           
-            #save RadarData-Object to DWD-Object
-            self.data                 = radar_data
+            #save RadarData-Object to DwdRadar-Object
+            self.data               = radar_data
             
         
         

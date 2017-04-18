@@ -16,11 +16,12 @@ This file is reserved for the MainRadar class.
 Import all modules needed for this class.
 '''
 
+#python modules
 import wradlib
-import cartopy.crs as ccrs
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors 
+import numpy             as np
+import matplotlib.pyplot as plt
+
 
 
 
@@ -30,237 +31,228 @@ import matplotlib.colors as mcolors
 ########################################################################
 class Radar(object):
      
-     '''
-     This main Radar-Object will get a sub-object for each of the 
-     different radars (like pattern and boostedt).
-     Methods working in general for the radars are part of main object.
-     '''
+    '''
+    This main Radar-class has a sub-class for each of the 
+    different radars (like pattern and boostedt).
+    Methods working in general for the radars are part of main object.
+    '''
      
      
      
      
      
-     ###################################################################
-     ### initialization ###
-     ###################################################################
-     def __init__(self):
+    ###################################################################
+    ### initialization ###
+    ###################################################################
+    def __init__(self,radar_par):
          
-          '''
-          Does nothing so far 
-          '''
-          
-          pass
-     
-     
-     
-     
-     
-     ###################################################################
-     ### read_file-method ###
-     ###################################################################
-     def read_file(self):
-          
-          '''
-          This method is specified in sub-objects, since reading files
-          differs from radar to radar.
-          '''
-     
-          raise NotImplementedError
-     
-     
-     
-     
-     
-     ###################################################################
-     ### method to increase azimuth resolution by a factor ###
-     ###################################################################
-     def increase_azi_res(self):
-          
-          '''
-          Increases azimuth resolution of radar dataset. This is done
-          by looping through the data lines (azimuth angles) and
-          copy each line 'res_fac' times to a new list. 
-          This is equivalent to dividing all grid boxes into 
-          'res_fac' sub-grid boxes, when the coordinates of the sub grid
-          boxes are adjusted (growing with 1/x ° instead of 1°).
-          '''
-          
-          #will be filled with reflectivity values of incr. resolution
-          data_inc_res = []
-          
-          #loop through radar data lines (=azimuth angles)
-          for data_line in self.data.refl:
-
-               #append data line duplicate 'res_factor'-times         
-               for i in range(self.res_fac):     
-                    data_inc_res.append(data_line)
-          
-          #save artificially increased dataset to object
-          self.data.refl_inc = np.array(data_inc_res)
-         
-          #azi. coords of data pts with artificially incr. res.
-          azi_coords_inc = np.arange(
-                            self.data.azi_start,
-                            self.data.azi_steps*self.data.azi_rays\
-                            + self.data.azi_start,
-                            self.data.azi_steps/self.res_fac
-                            )
-
-          #take care of transition from 360 to 0
-          self.data.azi_coords_inc = (azi_coords_inc + 360) % 360
-
-     
-
-
-     
-     ###################################################################
-     ### calculate coordinates of middle pixel for each box ###
-     ###################################################################
-     def get_pixel_center(self):           
-     
-          '''
-          Calculates polar coordination of the middle pixel for each 
-          polar grid box of radar data. 
-          This is done by averaging azimuth angles and range values of 
-          two adjacent data points respectively, for all data points.
-          
-          The average can be calculated simply by adding (subtracting) 
-          half of the step to each value for data points at the near 
-          (far) edge of the grid box. (only works, if angle and range
-          step between 2 measurements don't change)
+        '''
+        Saves radar parameters to object.
+        '''
         
-          The coordinates of the middle pixels are then saved
-          in form of a numpy meshgrid, which gives access to all
-          combinations of range and azimuth coordinates.
-          '''
-               
-          #define shorter names for the coordination arrays
-          range_coords = self.data.range_coords
-          azi_coords   = self.data.azi_coords_inc
+
+        self.file_name = radar_par[0] #name of data file
+        self.minute    = radar_par[1] #minute of hourly files 
+        self.proc_key  = radar_par[2] #process key
+        self.res_fac   = radar_par[3] #factor to increase azi resolution
+     
+     
+     
+
+
+    ###################################################################
+    ### read_file-method ###
+    ###################################################################
+    def read_file(self):
           
-          #get array of azi coords of middle pixels
-          azi_coords   = (azi_coords + self.data.azi_steps/\
-                            (2*self.res_fac)) % 360
+        '''
+        This method is specified in sub-objects, since reading files
+        differs from radar to radar.
+        '''
+     
+        raise NotImplementedError
+     
+     
+     
+     
+     
+    ###################################################################
+    ### method to increase azimuth resolution by a factor ###
+    ###################################################################
+    def increase_azi_res(self):
+          
+        '''
+        Increases azimuth resolution of radar dataset. This is done
+        by looping through the data lines (azimuth angles) and
+        copy each line 'res_fac' times to a new list. 
+        This is equivalent to dividing all grid boxes into 
+        'res_fac' sub-grid boxes, when the coordinates of the sub grid
+        boxes are adjusted (growing with 1/x ° instead of 1°).
+
+        Input: None
+        Output: None
+        '''
+          
+        #will be filled with reflectivity values of incr. resolution
+        data_inc_res = []
+          
+        #loop through radar data lines (=azimuth angles)
+        for data_line in self.data.refl:
+
+            #append data line duplicate 'res_factor'-times         
+            for i in range(self.res_fac):     
+                data_inc_res.append(data_line)
+          
+        #save artificially increased dataset to object
+        self.data.refl_inc = np.array(data_inc_res)
          
-          #get array of range coords of middle pixels
-          range_coords = range_coords - self.data.r_steps/2
+        #azi. coords of data pts with artificially incr. res.
+        azi_coords_inc = np.arange(
+            self.data.azi_start,
+            self.data.azi_steps*self.data.azi_rays\
+            + self.data.azi_start,
+            self.data.azi_steps/self.res_fac
+            )
+
+        #take care of transition from 360 to 0
+        self.data.azi_coords_inc = (azi_coords_inc + 360) % 360
+
+
+
+
+
+    ###################################################################
+    ### calculate coordinates of middle pixel for each box ###
+    ###################################################################
+    def get_pixel_center(self):           
+     
+        '''
+        Calculates polar coordination of the middle pixel for each 
+        polar grid box of radar data. 
+        This is done by averaging azimuth angles and range values of 
+        two adjacent data points respectively, for all data points.
+        
+        The average can be calculated simply by adding (subtracting) 
+        half of the step to each value for data points at the near 
+        (far) edge of the grid box. (only works, if angle and range
+        step between 2 measurements don't change)
+        
+        The coordinates of the middle pixels are then saved
+        in form of a numpy meshgrid, which gives access to all
+        combinations of range and azimuth coordinates.
+
+        Input: None
+
+        Output: numpy meshgrid of range and azimuth coordinates of the
+        middle pixel of each polar grid box.
+        '''
            
-          #create a numpy meshgrid
-          pixel_center = np.meshgrid(range_coords, azi_coords)
-          
-          #return coords of middle pixels
-          return pixel_center
-     
-     
-     
-     
-     
-     ###################################################################
-     ### method to transform polar to cartesian coordinates ###
-     ###################################################################
-     def polar_to_cartesian(self,polar_range,polar_azi):
-          
-          '''
-          Uses a wradlib function to calculate lon/lat cartesian 
-          coordinates out of polar coordinates. Needs a wradlib 
-          environment to work. See wradlib.org for more details.
-          '''
-          
-          #transform polar coordinates to lon/lat cart. coordinates
-          #lon.shape and lat.shape = (360,600) = (azimuth,range)
-          lon,lat = wradlib.georef.polar2lonlat(
-                        polar_range, polar_azi,
-                        (self.data.lon_site, self.data.lat_site),
-                        re=6370040
-                        ) 
-
-          #return cartesian coordinates
-          return lon, lat
+        #define shorter names for the coordination arrays
+        range_coords = self.data.range_coords
+        azi_coords   = self.data.azi_coords_inc
+        
+        #get array of azi coords of middle pixels
+        azi_coords   = (azi_coords + self.data.azi_steps/\
+                        (2*self.res_fac)) % 360
+        
+        #get array of range coords of middle pixels
+        range_coords = range_coords - self.data.r_steps/2
+        
+        #create a numpy meshgrid
+        pixel_center = np.meshgrid(range_coords, azi_coords)
+        
+        #return coords of middle pixels
+        return pixel_center
+    
 
 
 
 
+    ###################################################################
+    ### method to transform polar to cartesian coordinates ###
+    ###################################################################
+    def polar_to_cartesian(self,polar_range,polar_azi):
+      
+        '''
+        Uses a wradlib function to calculate lon/lat cartesian 
+        coordinates out of polar coordinates. Needs a wradlib 
+        environment to work. See wradlib.org for more details.
 
-     ###################################################################
-     ### method to transform cartesian to rotated pole coordinates ###
-     ###################################################################
-     def rotate_pole(self,lon,lat):
-          
-          '''
-          Transforms cartesian coordinates to rotated pole coordinates
-          using a function from Claire Merker. 
-          (claire.merker@uni-hamburg.de)
-          '''          
-          
-          #coordinates of rotated pole
-          rotated_pole = [-170.415, 36.0625]
-     
-          #get projection
-          proj         = ccrs.RotatedPole(
-                                rotated_pole[0], 
-                                rotated_pole[1]
-                                )
-          #calculate coordinates in rotated pole coordinate system
-          coords_rot   = proj.transform_points(
-                                ccrs.Geodetic(), lon, lat
-                                )
-          
-          #return rotated coordinates
-          return coords_rot
+        Input: Array of polar range coordinates, array of corresponding
+        polar azimuth coordinates.
+
+        Output: Array of cartesian longitude coordinates, array of 
+        corresponding cartesian latitude coordinates.
+        '''
+        
+        #transform polar coordinates to lon/lat cart. coordinates
+        #lon.shape and lat.shape = (360,600) = (azimuth,range)
+        lon,lat = wradlib.georef.polar2lonlat(
+                    polar_range, polar_azi,
+                    (self.data.lon_site, self.data.lat_site),
+                    re=6370040
+                    ) 
+        
+        #return cartesian coordinates
+        return lon, lat
+        
           
           
      
 
-
-     ####################################################################
-     ### method to plot radar data ###
-     ####################################################################
-     def plot(self):
+    ####################################################################
+    ### method to plot radar data ###
+    ####################################################################
+    def plot(self):
 
         '''
         This method plots radar data without any interpolating.
+
+        Input: None
+        
+        Output: None
         '''
         
-
-
-
-
+        
+        
+        
+        
         ################################################################
         ### prepare plot ###
         ################################################################
-
+        
         '''
-        prepares the plot by getting data and coordinates.
+        Prepares the plot by getting data and coordinates.
         '''
-
+        
         #reflectivity array
-        dbz          = self.data.refl
+        dbz           = self.data.refl
         
         #get time
-        time_start   = self.data.time_start
-        time_end     = self.data.time_end
-
+        time_start    = self.data.time_start
+        time_end      = self.data.time_end
+        
         #get coordinates of data (transform range to km)
-        range_coords = self.data.range_coords/1000
-        azi_coords   = self.data.azi_coords
-
+        range_coords  = self.data.range_coords/1000
+        azi_coords    = self.data.azi_coords
+        
         #put a mask on the reflectivity array
         mask_ind      = np.where(dbz <= np.nanmin(dbz))
         dbz[mask_ind] = np.nan
         ma            = np.ma.array(dbz,mask=np.isnan(dbz))
-
         
-
-
-
+        
+        
+        
+        
         ################################################################
         ### actual plot ###
         ################################################################
         
         '''
-        plots data 
+        Plots data 
         '''
-
+        
         #create colormap for plot (continously changing colormap)                                                                    
         cmap     = mcolors.LinearSegmentedColormap.from_list(
            'my colormap',['white','blue','red','magenta']
@@ -271,14 +263,10 @@ class Radar(object):
             ma, range_coords, azi_coords, cmap = cmap, refrac = False,
             vmin = -32.5, vmax = 70
             )
- 
-        #caax.toggle_axisline()
-        #caax.grid(True)
         
         #create colorbar and increase tick labelsize
         cbar = plt.colorbar(pm)
         cbar.ax.tick_params(labelsize = 18)
-
         
         #set labels
         caax.set_xlabel('x_range [km]', fontsize = 18)
@@ -302,4 +290,5 @@ class Radar(object):
         #show plot
         plt.show()
         
-      
+        
+        

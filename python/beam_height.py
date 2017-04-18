@@ -1,6 +1,7 @@
-###Calculates heights of radar beams for pattern or dwd radar
+###Plot beam heights
 
 '''
+Calculates and plots middle of beam heights of pattern or dwd radar.
 '''
 
 
@@ -8,21 +9,28 @@
 
 
 ########################################################################
-### modules ###
+### modules and functions ###
 ########################################################################
 
 '''
-imports modules needed for this program
+Imports modules and functions needed for this program.
 '''
 
+#python modules 
 import re                                    
-import parameters as par                     
-import wradlib  
-import numpy as np                             
-from MasterModule.main_radar     import Radar 
-from MasterModule.dwd_radar      import Dwd   
-from MasterModule.pattern_radar  import Pattern
-from MasterModule.cartesian_grid import CartesianGrid 
+import numpy as np 
+
+#MasterModule modules  
+from MasterModule.cartesian_grid import CartesianGrid                           
+from MasterModule.dwd_radar      import DwdRadar 
+from MasterModule.heights_plot   import HeightsPlot  
+from MasterModule.pattern_radar  import PatternRadar
+
+#parameters
+import parameters as par 
+
+#functions
+from functions import rotate_pole
 
 
 
@@ -36,41 +44,94 @@ from MasterModule.cartesian_grid import CartesianGrid
 Get parameters. Parameters can be set in parameters.py
 '''
 
-file_name = par.radar[0] #radar data file to be used
-minute    = par.radar[1] #minute of file to be plotted (only for pat.)
-proc_key  = par.radar[2] #key for processing step (only for pat. radar)
-res_fac   = par.radar[3] #actor to incr. azimuth resolution 
-offset    = par.offset   #offset for wrongly calibrated azimuth angle
-grid_par  = par.grid_par #list of grid parameters for the cart. grid
-isolines  = par.isolines #array of height isolines to be plotted
-tick_nr   = par.tick_nr  #nr of grid lines to be plotted
+#parameters
+radar_par = par.radar_par #list of radar parameters
+grid_par  = par.grid_par  #list of grid parameters
+plot_par  = par.plot_par  #list of plot parameters
 
+#name of file
+file_name = radar_par[0]
+
+#offset of pattern radar
+offset    = par.offset
 
 
 
 
 ########################################################################
-### read in data ###
+### Create objects ###
 ########################################################################
 
 '''
-Data is saved to a Radar-Object. The method used to read in the data
-differs, depending on the radar that shall be plotted. Information 
-about the radar and processing step is in the name of the data file.
---> scan data file name to find out which radar is going to be plotted
-and create corresponding radar object.
+Creates following objects:
+- DwdRadar or PatternRadar (depending on input file) to read in data
+- CartesianGrid for interpolating data to Cartesian Grid
+- HeightsPlot for plotting heights
+
+Creates the correct radar object after scanning (using regular 
+expressions) the file_name, which contains information about the radar
+and processing step.
 '''
 
-#scan data file and create corresponding radar object
+
+
+################# radar object #########################################
+
+#for dwd radars
 if re.search('dwd_rad_boo',file_name):
-    radar = Dwd(file_name,res_fac)
-elif re.search('level1',file_name):
-    radar = Pattern(file_name,minute,offset,'dbz',res_fac)
+    radar = DwdRadar(radar_par)
+
+#for pattern radars
 elif re.search('level2',file_name):
-    radar = Pattern(file_name,minute,offset,proc_key,res_fac)
+    radar = PatternRadar(radar_par,offset)
+
+
+
+############ Cartesian Grid object #####################################
+car_grid = CartesianGrid(grid_par)
+
+
+
+############ HeightsPlot object ########################################
+heights_plot = HeightsPlot(grid_par,plot_par)
+
+
+
+
+
+########################################################################
+### Read in data ###
+########################################################################
+
+'''
+Reads in data, by calling the read_file method.
+'''
 
 #read in data
 radar.read_file()
+
+
+
+
+
+########################################################################
+### Get rotated site coords ###
+########################################################################
+
+'''
+Method to calculate beam heights needs rotated pole coords of radar 
+site. 
+--> Calculate rotated coords by using function from Claire Merker.
+'''
+
+#coordinates of radar site
+site = (radar.data.lon_site,radar.data.lat_site)
+        
+#transform site coords to rotated pole coords
+rot_site = rotate_pole(np.array(site[0]), np.array(site[1]))
+        
+#bring rot_site to correct shape
+rot_site = (rot_site[0][0], rot_site[0][1])
 
 
 
@@ -81,26 +142,12 @@ radar.read_file()
 ########################################################################
 
 '''
-Calculates the height of the beam for each grid box of cartesian grid.
+Calculates the height of the beam for each grid box of cartesian grid,
+by calling the get_beam_height method. 
 '''
 
-#create Cartesian Grid object
-car_grid = CartesianGrid(grid_par)
-
-#coordinates of radar site
-site = (radar.data.lon_site,radar.data.lat_site)
-
-#transform site coords to rotated pole coords
-rot_site = radar.rotate_pole(np.array(site[0]), np.array(site[1]))
-
-#bring rot_site to correct shape
-rot_site = (rot_site[0][0], rot_site[0][1])
-
-#get distance of grid box to radar site 
-a_dist = car_grid.get_distance(rot_site)
-
-#get height of radar beam at each grid box
-heights = wradlib.georef.beam_height_n(a_dist,radar.data.ele)
+#get heights
+heights = car_grid.get_beam_height(rot_site,radar.data.ele)
 
 
 
@@ -114,6 +161,8 @@ heights = wradlib.georef.beam_height_n(a_dist,radar.data.ele)
 Plots heights of radar beam as isolines.
 '''
 
-title = str(radar.name) + ' - heights'
-#plot heights
-car_grid.plot_heights(heights,isolines,tick_nr,title)
+#title of plot
+title = radar.name + ' - heights'
+
+#make plot
+heights_plot.make_plot(heights,title)

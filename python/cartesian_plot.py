@@ -19,77 +19,106 @@ cover the pattern area.
 
 
 ########################################################################
-### modules ###
+### modules and functions ###
 ########################################################################
 
 '''
-Modules that need to be imported
+Imports modules and functions needed for this program.
 '''
 
-#modules
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors                       
-import numpy as np                                        
-import re
-import seaborn as sb
-import parameters as par
+#python modules
+import re                                                            
 from pathlib import Path
-from MasterModule.main_radar import Radar
-from MasterModule.dwd_radar import Dwd
-from MasterModule.pattern_radar import Pattern
-from MasterModule.radar_data import RadarData
+
+#MasterModule modules
 from MasterModule.cartesian_grid import CartesianGrid
-from MasterModule.grid_parameter import GridParameter
+from MasterModule.dwd_radar      import DwdRadar
+from MasterModule.pattern_radar  import PatternRadar
+from MasterModule.refl_plot      import ReflPlot
 
-
+#parameter
+import parameters as par
+    
+#functions
+from functions import rotate_pole
     
     
-                    
+
+                
+
 ########################################################################
-### lists, parameters ###
+### parameters ###
 ########################################################################
 
 '''
 Some parameters, that can be set in parameters.py.
-Also, lists of program are defined here.
 '''
 
 #parameters
-file_name = par.radar[0]  #name of data file
-minute    = par.radar[1]  #minute of file to be plotted (only for pat.)
-proc_key  = par.radar[2]  #key for processing step (only for pat. radar)
-res_fac   = par.radar[3]  #actor to incr. azimuth resolution 
+radar_par = par.radar_par #radar parameter
+grid_par  = par.grid_par  #grid parameter
+plot_par  = par.plot_par  #plot parameter
 
-#grid_par = [[[lon_start,lon_end],[lat_start,lat_end],
-#            [lon_site,lat_site],max_range,resolution]]
-grid_par  = par.grid_par  #numpy array containing grid parameters 
-tick_nr   = par.tick_nr   #number of grid lines to be labeled
-offset    = par.offset    #offset for wrongly calibrated azimuth angle
-rain_th   = par.rain_th   #threshold, at which rain is assumed
+#file_name
+file_name = radar_par[0]
 
+#offset of radar
+offset    = par.offset
+
+#threshold, at which rain is plotted
+rain_th   = par.rain_th
 
 
 
 
 ########################################################################
-### read in data ###
+### Create objects ###
 ########################################################################
 
 '''
-Data is saved to a Radar-Object. The method used to read in the data
-differs, depending on the radar that shall be plotted. Information 
-about the radar and processing step is in the name of the data file.
---> scan data file name to find out which radar is going to be plotted
-and create corresponding radar object.
+Creates following objects:
+- DwdRadar or PatternRadar (depending on input file) to read in data
+- CartesianGrid for interpolating data to cartesian grid
+- ReflPlot for plotting reflectivity data on cartesian grid
+
+Creates the correct radar object after scanning (using regular 
+expressions) the file_name, which contains information about the radar
+and processing step.
 '''
 
-#scan data file and create corresponding radar object
+
+
+################### radar object #######################################
+
+#for dwd radars
 if re.search('dwd_rad_boo',file_name):
-    radar = Dwd(file_name,res_fac)
-elif re.search('level1',file_name):
-    radar = Pattern(file_name,minute,offset,'dbz',res_fac)
+    radar = DwdRadar(radar_par)
+
+#for pattern radars
 elif re.search('level2',file_name):
-    radar = Pattern(file_name,minute,offset,proc_key,res_fac)
+    radar = PatternRadar(radar_par,offset)
+
+
+
+############### Cartesian Grid object ##################################
+car_grid = CartesianGrid(grid_par)
+
+
+
+############## ReflPlot object #########################################
+refl_plot = ReflPlot(grid_par,plot_par)           
+
+
+
+
+
+########################################################################
+### Read in data ###
+########################################################################
+
+'''
+Reads in data, by calling the read_file method.
+'''
 
 #read in data
 radar.read_file()
@@ -141,7 +170,7 @@ pixel_center = radar.get_pixel_center()
 
 '''
 Transformation of polar coordinates of grid boxes (middle pixel) to 
-cartesian coordinates, using a wradlib function
+cartesian coordinates, using a wradlib function.
 '''
 
 #get cartesian coordinates of radar data
@@ -161,26 +190,7 @@ a function from Claire Merker.
 '''
 
 #rotated_coords.shape=(360,600,3), (azi,range,[lon,lat,height])
-coords_rot = radar.rotate_pole(lon,lat) 
-
-#save rotated coords to radar object
-radar.data.lon_rota = coords_rot[:,:,0]
-radar.data.lat_rota = coords_rot[:,:,1]
-        
-
-
-
-
-########################################################################
-### Create new cartesian grid ###
-########################################################################
-
-'''
-Creates the cartesian grid, on which data shall be plotted.
-'''
-
-#CartesianGrid-object
-car_grid = CartesianGrid(grid_par) 
+coords_rot = rotate_pole(lon,lat) 
 
 
 
@@ -189,7 +199,6 @@ car_grid = CartesianGrid(grid_par)
 ########################################################################
 ### Check/Create index-matrix ###
 ########################################################################
-
 
 '''
 Radar data in rotated pole coordinates will be interpolated to the
@@ -218,7 +227,7 @@ index_matrix = Path(index_matrix_file)
 
 #if file doesn't exist, create it
 if not index_matrix.is_file():
-    car_grid.create_index_matrix(radar,index_matrix_file)
+    car_grid.create_index_matrix(index_matrix_file,coords_rot)
 
 
 
@@ -237,13 +246,12 @@ be set to 5, to avoid large differences at low reflectivity.
 '''
 
 #interpolate radar data to cartesian grid
-refl                 = car_grid.data2grid(index_matrix_file,radar)
+refl = car_grid.data2grid(
+    index_matrix_file,coords_rot,radar.data.refl_inc
+    )
 
-#set reflectivities smaller than 5 to 5)
+#set reflectivities smaller than 5 to 5 (since no rain not def)
 refl[refl < rain_th] = rain_th
-
-#mirror columns --> matplotlib plots the data exactly mirrored
-refl                 = refl
 
 
 
@@ -257,5 +265,14 @@ refl                 = refl
 Plots data on the new cartesian grid.
 '''
 
-car_grid.plot_data(tick_nr,radar,refl)
+#create title
+title = str(radar.name)                    \
+        +'-data: '                         \
+        + str(radar.data.time_start.time())\
+        + ' - '                            \
+        + str(radar.data.time_end.time())  \
+        +'\n'                              \
+        + str(radar.data.time_end.date())
 
+#make plot
+refl_plot.make_plot(refl,title)
