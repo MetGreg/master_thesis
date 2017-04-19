@@ -71,6 +71,7 @@ rain_th   = par.rain_th
 
 
 
+
 ########################################################################
 ### Create objects ###
 ########################################################################
@@ -212,7 +213,7 @@ and cartesian grid. If not, call method to create it.
 '''
 
 #the name of the file
-index_matrix_file =  './index_matrix/index_matrix_'     \
+index_matrix_file =  '../index_matrix/index_matrix_'     \
                         +str(radar.name)+'_'            \
                         +str(car_grid.lon_start)+'_'\
                         +str(car_grid.lon_end)+'_'  \
