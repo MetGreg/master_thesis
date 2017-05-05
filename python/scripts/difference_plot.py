@@ -1,20 +1,7 @@
-###Plot radar differences
-
 '''
-program plots differences between two radar images after interpolating
-to the same cartesian grid.
+This program plots differences between two radar images after 
+interpolating the radar data to the same cartesian grid.
 
-For both radars:
-1. step: Read in radar data. 
-2. step: Transform polar coordinates of radar data points to lon/lat
-3. step: Transform lon/lat coordinates to coordinates in a rotated pole    
-         coordinate system with Hamburg beeing the equator.
-4. step: Interpolate radar data in rotated pole coordinates to the new 
-         cartesian grid.
-
-Finally:
-5. step: Calculate reflectivity differences between radar data arrays.
-6. step: Plot reflectivity differences.
 '''
 
 
@@ -27,23 +14,25 @@ Finally:
 
 '''
 Import all modules and functions needed for this program.
-'''
 
-#python modules
+'''
+# Python modules
 import re
+import numpy as np
 from pathlib import Path
 
-#Mastermodule
+# MasterModule
 from MasterModule.cartesian_grid import CartesianGrid
-from MasterModule.dwd_radar      import DwdRadar
-from MasterModule.pattern_radar  import PatternRadar
+from MasterModule.dwd_radar import DwdRadar
+from MasterModule.pattern_radar import PatternRadar
 from MasterModule.refl_diff_plot import ReflDiffPlot
 
-#parameter
+# Parameter
 import parameters as par
 
-#functions
+# Functions
 from functions import rotate_pole
+
 
 
 
@@ -53,27 +42,17 @@ from functions import rotate_pole
 ########################################################################
 
 '''
-Get parameters. Parameters can be set in parameters.py
+Get parameters. Parameters can be set in parameters.py.
+
 '''
+# Parameters
+grid_par = par.grid_par 
+radar1_par = par.radar1_par 
+radar2_par = par.radar2_par 
+plot_par = par.plot_par 
 
-#parameters
-radar1_par = par.radar1_par #radar parameter of first radar
-radar2_par = par.radar2_par #radar parameter of second radar
-grid_par   = par.grid_par   #grid parameter
-plot_par   = par.plot_par   #plot parameter
-
-#file_name
-file1      = radar1_par[0]
-file2      = radar2_par[0]
-
-#offset of radar
-offset     = par.offset
-
-#threshold, at which rain is plotted
-rain_th    = par.rain_th
-
-#lists
-l_refl     = [] #reflectivity matrices of radars
+# Lists
+l_refl = [] #reflectivity matrices of radars
 
 
 
@@ -92,48 +71,53 @@ Creates all objects needed:
 Creates the correct radar object after scanning (using regular 
 expressions) the file_name, which contains information about the radar
 and processing step.
+
 '''
-
-
-
-####################### 1st radar ######################################
-
-#for dwd radars
-if re.search('dwd_rad_boo',file1):
+# 1st radar
+# dwd radars
+if re.search('dwd_rad_boo', radar1_par['file']):
     radar1 = DwdRadar(radar1_par)
 
-#for pattern radars
-elif re.search('level2',file1):
-    radar1 = PatternRadar(radar1_par,offset)
+# pattern radars
+elif re.search('level2', radar1_par['file']):
+    radar1 = PatternRadar(radar1_par)
 
-
-
-####################### 2nd radar ######################################
-
-#for dwd radars
-if re.search('dwd_rad_boo',file2):
+# 2nd radar
+# dwd radars
+if re.search('dwd_rad_boo', radar2_par['file']):
     radar2 = DwdRadar(radar2_par)
 
-#for pattern radars
-elif re.search('level2',file2):
-    radar2 = PatternRadar(radar2_par,offset)
+# pattern radars
+elif re.search('level2', radar2_par['file']):
+    radar2 = PatternRadar(radar2_par)
 
-#create list of both radar objectives, for easy looping
-radars = [radar1,radar2]
+# Create list of both radar objectives, for easy looping
+radars = [radar1, radar2]
 
-
-
-#################### CartesianGrid object ##############################
+# CartesianGrid object
 car_grid = CartesianGrid(grid_par) 
 
-
-
-#################### ReflDiffPlot ######################################
-refl_diff_plot = ReflDiffPlot(grid_par,plot_par)
+# ReflDiffPlot object
+refl_diff_plot = ReflDiffPlot(grid_par, plot_par)
 
       
 
 
+
+####################################################################
+### read in data ###
+####################################################################
+
+'''
+Read in the data.
+
+'''
+radar1.read_file(radar1_par)
+radar2.read_file(radar2_par)
+    
+    
+    
+    
     
 ########################################################################
 ### Main Loop ###
@@ -142,38 +126,20 @@ refl_diff_plot = ReflDiffPlot(grid_par,plot_par)
 '''
 A lot of calculations are the same for both radars. These common
 calculations are done in this main loop:
- - read data
  - increase azimuth resolution
  - calculate middle pixel polar coordinates
  - calculate cartesian coordinates out of polar coords
  - calculate rotated pole coordinates out of cartesian coords
  - create index matrix
  - interpolate data to cartesian grid
-'''
 
-#loop through both radars
+'''
+# Loop through both radars
 for radar in radars:
     
-        
 
 
 
-    ####################################################################
-    ### read in data ###
-    ####################################################################
-    
-    '''
-    Data is saved to a Radar-Object. The method used to read in the data
-    differs, depending on the radar. (Different radar --> different 
-    object --> different read-method)
-    '''
-
-    #read in data
-    radar.read_file()
-    
-    
-    
-    
     
     ####################################################################
     ### artificially increase azimuth resolution ###
@@ -183,10 +149,9 @@ for radar in radars:
     The azimuth resolution of the radar usually is 1°. To avoid 
     empty grid boxes in the new cartesian grid, the azimuth 
     resolution is increased artificially. 
-    '''
     
-    #artificially increase azimuth resolution
-    radar.increase_azi_res()
+    '''
+    data_inc_res = radar.increase_azi_res()
     
     
     
@@ -202,11 +167,9 @@ for radar in radars:
     This method calculates for each grid box the polar coordinates 
     of the middle pixel out of the given coordinates at the edge of
     the box.
+   
     '''
-        
-    #pixel_center is a np.meshgrid 
-    #pixel_center[0] = range, pixel_center[1] = azi.
-    pixel_center = radar.get_pixel_center() 
+    mid_coords = radar.get_middle_pixel() 
     
     
     
@@ -219,10 +182,13 @@ for radar in radars:
     '''
     Transformation of polar coordinates of grid boxes (middle pixel) to 
     cartesian coordinates, using a wradlib function.
-    '''
     
-    #get cartesian coordinates of radar data
-    lon, lat = radar.polar_to_cartesian(pixel_center[0],pixel_center[1])
+    '''
+    # Create numpy meshgrid, to obtain all combinations
+    r, az = np.meshgrid(mid_coords.range_, mid_coords.azi)
+    
+    # Get cartesian coordinates of radar data
+    cart_coords = radar.polar_to_cartesian(r, az)
     
     
     
@@ -235,11 +201,13 @@ for radar in radars:
     '''
     Transform the cartesian coords to rotated pole coordinates using
     a function from Claire Merker.
-    '''
     
-    #coords_rot.shape=(360,600,3), (azi,range,[lon,lat,height])
-    coords_rot = rotate_pole(lon,lat) 
-
+    '''
+    # coords_rot.shape=(360,600,3), (azi,range,[lon,lat,height])
+    coords_rot = rotate_pole(cart_coords.lon, cart_coords.lat) 
+    lon = coords_rot[:,:,0]
+    lat = coords_rot[:,:,1]
+    
     
     
     
@@ -257,25 +225,35 @@ for radar in radars:
     time, but can be saved to a dat.file. 
     --> Check, if such a file is present already for the current radar
     and cartesian grid. If not, call method to create it.
+    
     '''
+    # Name of the index file
+    index_file = (
+        '../index_matrix/index_matrix_'
+        + str(radar.name)
+        + '_'
+        + str(car_grid.corners.lon_start)
+        + '_'
+        + str(car_grid.corners.lon_end)
+        + '_'
+        + str(car_grid.corners.lat_start)
+        + '_'
+        + str(car_grid.corners.lat_end)
+        + '_'
+        + str(car_grid.res_m)
+        + '_'
+        + str(radar.res_fac)
+        + '_'
+        + str(radar.offset)
+        + '.dat'
+        )
     
-    #the name of the file
-    index_matrix_file =  '../index_matrix/index_matrix_'     \
-                            +str(radar.name)+'_'            \
-                            +str(car_grid.lon_start)+'_'\
-                            +str(car_grid.lon_end)+'_'  \
-                            +str(car_grid.lat_start)+'_'\
-                            +str(car_grid.lat_end)+'_'  \
-                            +str(car_grid.res_m)+'_'    \
-                            +str(radar.res_fac)+'_'         \
-                            +str(offset)+'.dat'
+    # Path is used to check, if the file exists
+    index_matrix = Path(index_file)
     
-    #Path is used to check, if the file exists
-    index_matrix = Path(index_matrix_file)
-    
-    #if file doesn't exist, create it
+    # If file doesn't exist, create it
     if not index_matrix.is_file():
-        car_grid.create_index_matrix(index_matrix_file,coords_rot)
+        car_grid.create_index_matrix(index_file, lon, lat)
 
 
 
@@ -293,17 +271,15 @@ for radar in radars:
     large spread in dbz units. --> Reflectiviy smaller than 5 dbz, 
     will be set to 5,to avoid having large differences at low 
     reflectivity.
+    
     '''
+    # Interpolate reflectivity to the new grid
+    refl = car_grid.data2grid(index_file, data_inc_res)
     
-    #interpolate reflectivity to the new grid
-    refl = car_grid.data2grid(
-        index_matrix_file,coords_rot,radar.data.refl_inc
-        )
+    # Set reflectivities smaller than 5 to 5
+    refl[refl < plot_par['rain_th']] = plot_par['rain_th']
     
-    #set reflectivities smaller than 5 to 5
-    refl[refl < rain_th] = rain_th
-    
-    #append inverted reflectivity matrix to list
+    # Append inverted reflectivity matrix to list
     l_refl.append(refl)
     
 
@@ -317,16 +293,26 @@ for radar in radars:
 '''
 Plot the differences between the two radars on the cartesian grid by
 calling the plot_diff method of the cartesian grid objectiv.
-'''
 
-#title                           
-title = radar2.name + '('                             \
-    + str(radar2.data.time_start.time()) + ' - '      \
-    + str(radar2.data.time_end.time()) + ')'          \
-    + ' minus ' + radar1.name                         \
-    + '(' + str(radar1.data.time_start.time()) + ' - '\
-    + str(radar1.data.time_end.time()) + ')\n'        \
+'''
+# Title                           
+title = (
+    radar2.name
+    + '('
+    + str(radar2.data.time_start.time())
+    + ' - ' 
+    + str(radar2.data.time_end.time())
+    + ') minus '
+    + radar1.name
+    + '('
+    + str(radar1.data.time_start.time())
+    + ' - '
+    + str(radar1.data.time_end.time())
+    + ')\n'
     + str(radar1.data.time_end.date())
+    )
         
-#plot differences
-refl_diff_plot.make_plot(l_refl,[radar1.name,radar2.name],title)
+# plot differences
+refl_diff_plot.make_plot(
+    l_refl[0], l_refl[1], radar1.name, radar2.name, title
+    )

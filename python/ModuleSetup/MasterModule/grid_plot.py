@@ -1,108 +1,104 @@
-###GridPlot class
+'''This module only contains the GridPlot class, which can be used for
+different plots on a cartesian grid.
 
 '''
-This file is reserved for the GridPlot Class.
-'''
-
-
-
-
-
-########################################################################
-### modules ###
-########################################################################
-
-'''
-Imports all modules needed for this class.
-'''
-
-#python modules
+# Python modules
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap as lsc
 
-#MasterModule
+# MasterModule
 from .cartesian_grid import CartesianGrid
 
 
-
-
-
-########################################################################
-### GridPlot class ###
-########################################################################
 class GridPlot(CartesianGrid):
+    '''Class for plotting on a cartesian grid
     
-    '''
-    GridPlot class for all plot objectives of a cartesian grid. Inherits
-    from CartesianGrid object.
-    '''
-
+    This class is a subclass of the CartesianGrid class and the super
+    class of ReflPlot, HeightsPlot and ReflDiffPlot. This class only 
+    saves all general attributes, which are the same for all kind of 
+    plots on a cartesian grid.
     
-
-
-
-    ####################################################################
-    ### Initialization ###
-    ####################################################################
-    def __init__(self,grid_par,plot_par):
+    Attributes:
+        log_iso (bool): If True --> isolines around rain areas will be 
+            plotted.
+        rain_th (int): Dbz threshold, at which rain is assumed.
+        lon_plot (numpy.ndarray): All longitude ticks.
+        lat_plot (numpy.ndarray): All latitude ticks.
+        lon_ticks (numpy.ndarray): Longitude ticks, which will be 
+            labeled.
+        lat_ticks (numpy.ndarray): Latitute ticks, which will be 
+            labeled.
+        lon_label (numpy.ndarray): Labels of Longitude ticks.
+        lat_label (numpy.ndarray): Labels of Latitude ticks.
+        mask (numpy.ndarray): Mask array.
+        cm_mask (matplotlib.colors.LinearSegmentedColormap): Colormap 
+            for the mask.
         
-        '''
-        Saves all general attributes needed for creating a plot on a
-        cartesian grid.        
-        '''
+    '''
+
+    def __init__(self, grid_par, plot_par):
+        '''Initialization of GridPlot
         
-        #call init of super class
+        Calls the init-method of super class and saves all general 
+        attributes needed for creating a plot on a cartesian grid.        
+        
+        Args:
+            grid_par (dict): Grid parameters, e.g. location, resolution
+                and shape.
+            plot_par (dict): Plot parameters, e.g. number of grid lines,
+                logical variabel whether to plot rain area contours,
+                dbz threshold, height isolines, mask range
+                
+        '''
+        # Call initialization method of super class
         super().__init__(grid_par)
 
-        #get number of labeled ticks in plot
-        tick_nr        = plot_par[0]
+        # Get number of labeled ticks in plot
+        tick_nr = plot_par['tick_nr']
 
-        #if log_iso == True --> draw isolines around rain areas        
-        self.log_iso   = plot_par[1]
+        # If log_iso == True --> draw isolines around rain areas        
+        self.log_iso = plot_par['log_iso']
 
-        #get threshold, at which rain is assumed
-        self.rain_th   = plot_par[2]
+        # Get threshold, at which rain is assumed
+        self.rain_th = plot_par['rain_th']
 
-        #get x,y array to plot contour plots
-        self.lon_plot  = np.arange(self.lon_dim)
-        self.lat_plot  = np.arange(self.lat_dim)
+        # Get x,y array to plot contour plots
+        self.lon_plot = np.arange(self.lon_shape)
+        self.lat_plot = np.arange(self.lat_shape)
         
-        #get lon, lat ticks to be labeled
-        self.lon_ticks = np.linspace(0,self.lon_dim-1,num=tick_nr)
-        self.lat_ticks = np.linspace(0,self.lat_dim-1,num=tick_nr)
+        # Get lon, lat ticks to be labeled
+        self.lon_ticks = np.linspace(0, self.lon_shape - 1, num=tick_nr)
+        self.lat_ticks = np.linspace(0, self.lat_shape - 1, num=tick_nr)
 
-        #getting rot. lon-coords of grid lines to be labeled
+        # Getting rot. lon-coords of grid lines to be labeled
         self.lon_label = np.around(
-            np.linspace(self.lon_start,self.lon_end,num=tick_nr), 
-            decimals=2
+            np.linspace(self.corners.lon_start, self.corners.lon_end,
+            num=tick_nr), decimals=2
             )
 
-        #getting rot. lat-coords of grid lines to be labeled                        
+        # Getting rot. lat-coords of grid lines to be labeled                        
         self.lat_label = np.around(
-            np.linspace(self.lat_start,self.lat_end,num=tick_nr),
-            decimals=2
+            np.linspace(self.corners.lat_start, self.corners.lat_end,
+            num=tick_nr), decimals=2
             )
 
-        #get mask for grid boxes outside of pattern range
-        self.mask      = self.get_mask()
+        # Get mask for grid boxes outside of pattern range
+        self.mask = self.get_mask(plot_par['max_range'])
 
-        #create colormap for the mask
-        colors         = ['#00000000','grey']
-        self.cm_mask = lsc.from_list('cm_mask',colors)
+        # Create colormap for the mask
+        colors = ['#00000000', 'grey']
+        self.cm_mask = lsc.from_list('cm_mask', colors)
        
-       
-
-
-
-
-    ####################################################################
-    ### make plot ###
-    ####################################################################
     def make_plot(self):
-
+        '''Create a plot on a cartesian grid
+        
+        This method belongs to specific subclasses ReflPlot,
+        HeightPlot or ReflDiffPlot. When the method is called from this
+        superclass, raise an Error.
+        
+        Raises:
+            NotImplementedError: If this method is called.
+        
         '''
-        This method belongs to specific plotting classes, which inherit
-        from this GridPlot class.
-        '''
-
+        # Raise error
         raise NotImplementedError

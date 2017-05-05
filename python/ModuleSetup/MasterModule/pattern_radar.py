@@ -1,199 +1,116 @@
-###PatternRadar class
-
+'''This module only contains the PatternRadar class, which can be used
+for netCDF-files of the PATTERN radar.
+ 
 '''
-This file is reserved for the PatternRadar class.
-'''
-
-
-
-
-
-########################################################################
-### modules ###
-########################################################################
-
-'''
-Import all modules needed for this class.
-'''
-
-#python modules 
-from netCDF4  import Dataset
+# Python modules 
 from datetime import datetime
+from netCDF4 import Dataset
 
-#MasterModule
+# MasterModule
 from .main_radar import Radar
 from .radar_data import RadarData    
-    
-    
-    
 
-
-########################################################################
-### Pattern Class ###    
-########################################################################
+    
 class PatternRadar(Radar):
+    '''Class for Pattern radar data in netCDF-format
     
-    '''
-    PatternRadar class. Contains all methods specific designed for
-    Pattern-data. Inherits from Radar class.
-    '''
+    This class is designed for data coming from the 'Precipitation and 
+    Attenuation Estimates from a High-Resolution Weather Radar Network' 
+    (PATTERN) in netCDF-format. It is a subclass of the more general
+    "Radar" class. Using this class, a PATTERN data file can be read in. 
     
-    
-    
-    
-    
-    ####################################################################
-    ### initialization method ###
-    ####################################################################
-    def __init__(self,radar_par,offset):
+    Attributes:
+        name (str): Name of operating institute. 'Pattern' in this case.
+        offset (int): Angle, by which the pattern radar is rotated.
+        data (RadarData object): Used to save all kind of general radar 
+            data and meta data.
         
-        '''
-        Saves radar name and radar proc_key to object, which defines at 
-        which processing step the reflectivity data will be plottet. 
-        proc_key must be set in parameters.
-        '''
+    '''
+    
+    def __init__(self, radar_par):
+        '''Initialization of object
         
+        Saves attributes to the object and calls Initialization method
+        of super class.
+        
+        Args:
+            radar_par (dict): Radar parameters, e.g. name of file, 
+                minute to be plotted, processing step, factor to 
+                increase azimuth resolution, offset of radars azimuth 
+                angle.
+                
+        '''
+        # Call init method of super class
         super().__init__(radar_par)
         
-        #save name of the radar to object
-        self.name   = 'pattern'
-
-        #save offset, by which the pattern radar is wrong  
-        self.offset = offset
-    
-    
-    
-
-
-    ####################################################################
-    ### method to read in pattern data (nc.files) ###
-    ####################################################################    
-    def read_file(self):
+        # Save attributes
+        self.name = 'pattern'
+        self.offset = radar_par['offset']
+        
+    def read_file(self, radar_par):
+        '''Read in data
+        
+        Reads pattern radar data and saves data to object. Only 
+        attributes needed for my calculations are read in. If more 
+        information about the file and the attributes is wished, check 
+        out the netCDF-file with ncview or ncdump -h.
         
         '''
-        Read and save the important information of the pattern data. 
-        If more information is wished, check the data file with 
-        ncdump -h or ncview. 
-
-        Input: None
-
-        Output: None
-        '''
     
-        #create a RadarData-object to generalize the radar-properties.
+        # Define shorter names for input parameters
+        proc_key = radar_par['proc_key']
+        minute = radar_par['minute']
+        
+        # Create a RadarData object to generalize the radar properties
         radar_data = RadarData()
         
-        #open data file
-        nc         = Dataset(self.file_name, mode='r')
-        
+        # Open data file
+        nc = Dataset(radar_par['file'], mode='r')
 
-
-
-
-        ################################################################
-        ### read in data ###
-        ################################################################
+        # lon/lat coords of site
+        radar_data.lon_site = nc.variables['lon'][:]                                        
+        radar_data.lat_site = nc.variables['lat'][:]
         
-        '''
-        Reads in the data.
-        '''
+        # Elevation of radar beam
+        radar_data.ele = nc.variables['ele'][:]
 
-        #lon/lat coords of site
-        lon_site     = nc.variables['lon'][:]                                        
-        lat_site     = nc.variables['lat'][:]
+        # Number of azimuth rays
+        radar_data.azi_rays = nc.dimensions['azi'].size                                    
         
-        #elevation of radar beam
-        ele          = nc.variables['ele'][:]
+        # Number of range bins                                        
+        radar_data.r_bins = nc.dimensions['range'].size 
 
-        #number of azimuth rays
-        azi_rays     = nc.dimensions['azi'].size                                    
+        # Starting value of azimuth angle
+        radar_data.azi_start = (
+            (nc.variables['azi'][0] + self.offset + 360) % 360  
+            )
+          
+        # Starting value of range
+        radar_data.r_start = nc.variables['range'][0]
         
-        #number of range bins                                        
-        r_bins       = nc.dimensions['range'].size 
-
-        #starting value of azimuth angle
-        azi_start    =(nc.variables['azi'][0] + self.offset + 360) % 360  
-        
-        #starting value of range
-        r_start      = nc.variables['range'][0]
-        
-        #azimuth angle steps between two measurements                                        
-        azi_steps    = (nc.variables['azi'][1] - nc.variables['azi'][0]\
-                        + 360) % 360
-        
-        #steps between 2 measurments in range
-        r_steps = nc.variables['range'][1] - nc.variables['range'][0]
+        # Azimuth angle steps between two measurements                                        
+        radar_data.azi_steps = (
+            (nc.variables['azi'][1] - nc.variables['azi'][0] + 360) 
+            % 360
+            )
+          
+        # Steps between 2 measurments in range
+        radar_data.r_steps = (
+            nc.variables['range'][1] - nc.variables['range'][0]
+            )
                                          
-        #array of to data points corresponding azimuth coordinates
-        azi_coords   =(nc.variables['azi'][:] + self.offset + 360) % 360
-        
-        #array of to data points corresponding range coordinates in [m]
-        range_coords = nc.variables['range'][:]                                    
-        
-        #array of measured reflectivity                                        
-        refl = nc.variables[self.proc_key][:][int(self.minute*2)] 
+        # Array of measured reflectivity                                        
+        radar_data.refl = nc.variables[proc_key][:][int(minute*2)] 
        
-        #time at which radar scan started
-        time_start   = nc.variables['time_bnds'][int(self.minute*2)][0]
-        time_start   = datetime.utcfromtimestamp(time_start)
+        # Time at which radar scan started
+        time_start = nc.variables['time_bnds'][int(minute*2)][0]
+        radar_data.time_start = datetime.utcfromtimestamp(time_start)
 
-        #time at which radar scan ended
-        time_end     = nc.variables['time_bnds'][int(self.minute*2)][1]            
-        time_end     = datetime.utcfromtimestamp(time_end)
+        # Time at which radar scan ended
+        time_end = nc.variables['time_bnds'][int(minute*2)][1]            
+        radar_data.time_end = datetime.utcfromtimestamp(time_end)
 
-
-
-
-
-        ################################################################
-        ### save the data to RadarData object ###
-        ################################################################
-        
-        '''
-        Saves data to radarData object.
-        '''
-
-        #lon/lat coords site
-        radar_data.lon_site     = float(lon_site)                                            
-        radar_data.lat_site     = float(lat_site)                                            
-        
-        #elevation of radar beam
-        radar_data.ele          = float(ele)
-
-        #number of azimuth rays
-        radar_data.azi_rays     = int(azi_rays)  
-        
-        #number of range bins
-        radar_data.r_bins       = int(r_bins)                                                
-        
-        #starting value of azimuth angle
-        radar_data.azi_start    = float(azi_start)
-
-        #starting value of range
-        radar_data.r_start      = float(r_start)
-
-        #steps between 2 measurements in azimuth
-        radar_data.azi_steps    = float(azi_steps)
-
-        #steps between 2 measurements in range
-        radar_data.r_steps      = float(r_steps)
-
-        #array of to data points corresponding azimuth coordinates
-        radar_data.azi_coords   = azi_coords
-                                                  
-        #array of to data points corresponding range coordinates
-        radar_data.range_coords = range_coords
-        
-        #array of measured reflectivity
-        radar_data.refl         = refl                                                  
-        
-        #time in utc at which radar scan started
-        radar_data.time_start   = time_start                            
-        
-        #time in utc at which radar scan ended
-        radar_data.time_end     = time_end                          
-        
-        #save the data to Pattern object
-        self.data               = radar_data
+        # Save the data to Pattern object
+        self.data = radar_data
         
 

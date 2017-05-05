@@ -1,116 +1,99 @@
-###HeightsPlot class
+'''This module only contains the HeightsPlot class, which can be used
+to create height isolines on a cartesian grid.
 
 '''
-This file is reserved for the HeightsPlot class.
-'''
-
-
-
-
-
-########################################################################
-### Modules ###
-########################################################################
-
-'''
-Import all modules needed for this class.
-'''
-
-#python modules
-import numpy.ma          as ma
+# Python modules
 import matplotlib.pyplot as plt
+import numpy.ma as ma
 
-#MasterModule
+# MasterModule
 from .grid_plot import GridPlot
 
 
-
-
-
-########################################################################
-### HeightsPlot class ###
-########################################################################
 class HeightsPlot(GridPlot):
+    '''Class for plots of beam heights on a cartesian grid
     
-    '''
-    Class for plots of beam heights on a cartesian grid. Inherits from 
-    GridPlot.
-    '''
-
-
-
-
-
-    ####################################################################
-    ### Initialization ###
-    ####################################################################
-    def __init__(self,grid_par,plot_par):
+    This class is the subclass of the GridPlot class. Using this class,
+    one can create a plot of height isolines on a cartesian grid.
     
-        '''
-        Calls init-method of super class and saves isolines 
-        (to be plotted) to object.
+    Attributes:
+        height_iso (numpy.ndarray): Array of height isolines to be 
+            plotted.
+        
+    '''
+
+    def __init__(self, grid_par, plot_par):
+        '''Initialization of object
+        
+        Calls init-method of super class and saves attributes.
+        
+        Args:
+            grid_par (dict): Grid parameters, e.g. location, resolution
+                and shape.
+            plot_par (dict): Plot parameters, e.g. number of grid lines,
+                logical variabel whether to plot rain area contours,
+                dbz threshold, height isolines, mask range.
+                
         '''
         
-        #call init method of super class
-        super().__init__(grid_par,plot_par)
+        # Call init method of super class
+        super().__init__(grid_par, plot_par)
 
-        #get isolines to be plotted
-        self.height_iso = plot_par[3]
-
-
-
-
-
-    ####################################################################
-    ### make plot ###
-    ####################################################################
-    def make_plot(self,heights,title):
-
-        '''
+        # Get isolines to be plotted
+        self.height_iso = plot_par['height_iso']
+       
+    def make_plot(self, heights, title):
+        '''Make plot of beam heights
+        
         Plots heights of beam as isolines on a cartesian grid.
+        
+        Args:
+            heights (numpy.ndarray): Heights to be plotted.
+            title (str): Title of the plot.
+            
         '''
 
-        #create masked array for plot
-        masked_height = ma.masked_array(heights,mask=self.mask)
-
-        #create subplot
-        fig,ax = plt.subplots() 
+        # Create masked array for plot
+        masked_height = ma.masked_array(heights, mask=self.mask)
+        
+        # Create subplot
+        fig, ax = plt.subplots() 
   
-        #plot the contours
+        # Plot the contours
         CS = plt.contour(
-            self.lon_plot,self.lat_plot,masked_height[::-1],
-            self.height_iso,colors='k',zorder=1
+            self.lon_plot, self.lat_plot, masked_height[::-1],
+            self.height_iso, colors='k', zorder=1
             )
 
-        #plot the mask
-        plt.imshow(self.mask[::-1],cmap=self.cm_mask,zorder=2)
+        # Plot the mask
+        plt.imshow(self.mask[::-1], cmap=self.cm_mask, zorder=2)
        
-        #label the contours
-        plt.clabel(CS,fontsize=18,fmt='%1.0f')
+        # Label the contours
+        plt.clabel(CS, fontsize=18, fmt='%1.0f')
 
-        #set ticks
+        # Set ticks
         ax.set_xticks(self.lon_ticks)                
         ax.set_yticks(self.lat_ticks)                
        
-        #set labels
-        ax.set_xticklabels(self.lon_label,fontsize=18)
+        # Set labels
+        ax.set_xticklabels(self.lon_label, fontsize=18)
         ax.set_yticklabels(
-            self.lat_label,fontsize=18,rotation='horizontal'
+            self.lat_label, fontsize=18, rotation='horizontal'
             )
         
-        #grid
+        # Grid
         ax.grid(color='k')
         ax.set_axisbelow(False) 
 
-        #label x- and y-axis                                                  
-        plt.xlabel('r_lon',fontsize=20)                                    
-        plt.ylabel('r_lat',fontsize=20)    
+        # Label x- and y-axis                                                  
+        plt.xlabel('r_lon', fontsize=20)                                    
+        plt.ylabel('r_lat', fontsize=20)    
 
-        #title                           
-        plt.title(title,fontsize=24)
+        # Title                           
+        plt.title(title, fontsize=24)
         
-        #prevent parts of picture to be cut off
+        # Prevent parts of picture to be cut off
         plt.tight_layout()
 
-        #show plot
+        # Show plot
         plt.show()

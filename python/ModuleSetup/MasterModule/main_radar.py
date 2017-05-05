@@ -1,294 +1,364 @@
-###MainRadar class
+''' This module contains the Radar, the CartesianCoordinates and the 
+MiddleCoordinates class.
+Radar: For calculations with radar data of Pattern or DWD.
+CartesianCoordinates: Saves cartesian coordinates of radar data.
+MiddleCoordinates: Saves polar coordinates of middle of grid boxes.
 
 '''
-This file is reserved for the MainRadar class.
-'''
-
-
-
-
-
-########################################################################
-### modules ###
-########################################################################
-
-'''
-Import all modules needed for this class.
-'''
-
-#python modules
+# Python modules
 import wradlib
-import matplotlib.colors as mcolors 
-import numpy             as np
-import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt 
+import numpy as np
 
 
-
-
-
-########################################################################
-### Main Radar class ###
-########################################################################
 class Radar(object):
-     
-    '''
-    This main Radar-class has a sub-class for each of the 
-    different radars (like pattern and boostedt).
-    Methods working in general for the radars are part of main object.
-    '''
-     
-     
-     
-     
-     
-    ###################################################################
-    ### initialization ###
-    ###################################################################
-    def __init__(self,radar_par):
-         
-        '''
-        Saves radar parameters to object.
-        '''
+    '''Class for general radar data
+    
+    This class creates a Radar object, which can be used for pattern
+    netcdf - data as well as hdf5-data from the 'Deutscher Wetterdienst'
+    (DWD). Using this class, it is possible to artificially increase
+    the azimuth resolution of the data. You can calculate azimuth-
+    and range coordinate arrays. Further, you can calculate the polar
+    coordinates of the middle of each polar grid box of the radar data, 
+    as well as transforming polar coordinates to longitude/latitude
+    cartesian coordinates. Finally, using this class, you can simply
+    plot the original reflectivity data.
+    
+    Note:
+        Most of the methods only work, if the radar data was succesfully 
+        read in already, using the read_file method of the DwdRadar
+        or PatternRadar subclass. 
+    
+    Attributes:
+        res_fac (int): Factor, by which the azimuth angle will be 
+            increased artificially.
         
-
-        self.file_name = radar_par[0] #name of data file
-        self.minute    = radar_par[1] #minute of hourly files 
-        self.proc_key  = radar_par[2] #process key
-        self.res_fac   = radar_par[3] #factor to increase azi resolution
+    '''
      
-     
-     
-
-
-    ###################################################################
-    ### read_file-method ###
-    ###################################################################
-    def read_file(self):
-          
+    def __init__(self, radar_par):
+        '''Initialization
+        
+        Saves attributes to object.
+        
+        Args:
+            radar_par (dict): Radar parameters, e.g. name of file, 
+                minute to be plotted, processing step, factor to 
+                increase azimuth resolution, offset of radars azimuth 
+                angle.
+        
         '''
-        This method is specified in sub-objects, since reading files
-        differs from radar to radar.
-        '''
-     
-        raise NotImplementedError
-     
-     
-     
-     
-     
-    ###################################################################
-    ### method to increase azimuth resolution by a factor ###
-    ###################################################################
+        self.res_fac = radar_par['res_fac']
+        
     def increase_azi_res(self):
+        '''Increase azimuth resolution of radar data array
+        
+        Increases azimuth resolution of radar dataset artificially by a 
+        specific factor.
+        
+        Returns: 
+            (numpy.ndarray): Data array of increased azimuth resolution.
+            
+        '''          
+        # Will be filled with reflectivity values of incr. resolution
+        data_inc = []
           
-        '''
-        Increases azimuth resolution of radar dataset. This is done
-        by looping through the data lines (azimuth angles) and
-        copy each line 'res_fac' times to a new list. 
-        This is equivalent to dividing all grid boxes into 
-        'res_fac' sub-grid boxes, when the coordinates of the sub grid
-        boxes are adjusted (growing with 1/x ° instead of 1°).
-
-        Input: None
-        Output: None
-        '''
-          
-        #will be filled with reflectivity values of incr. resolution
-        data_inc_res = []
-          
-        #loop through radar data lines (=azimuth angles)
-        for data_line in self.data.refl:
-
-            #append data line duplicate 'res_factor'-times         
+        # Append each line (azimuth) 'res_factor'-times to new array      
+        for line in self.data.refl:
             for i in range(self.res_fac):     
-                data_inc_res.append(data_line)
+                data_inc.append(line)
           
-        #save artificially increased dataset to object
-        self.data.refl_inc = np.array(data_inc_res)
-         
-        #azi. coords of data pts with artificially incr. res.
-        azi_coords_inc = np.arange(
-            self.data.azi_start,
-            self.data.azi_steps*self.data.azi_rays\
-            + self.data.azi_start,
-            self.data.azi_steps/self.res_fac
+        # Transform to numpy array
+        data_inc = np.array(data_inc)
+        
+        # Return data array of increase resolution
+        return data_inc
+    
+    def get_azi_coords(self):
+        '''Calculate azimuth coordinate array
+        
+        Calculates a coordinate array containing the azimuth 
+        coordinates of all radar data points.
+        
+        Returns:
+            (numpy.ndarray): azimuth coordinates of corresponding radar 
+                data array.
+        
+        '''
+        # Define shorter names for attributes
+        start = self.data.azi_start
+        steps = self.data.azi_steps
+        ray_nr = self.data.azi_rays
+        res_fac = self.res_fac
+        
+        # Azimuth coordinates of data points
+        azi_coords = np.arange(
+            start, steps*ray_nr + start, steps/res_fac
             )
 
-        #take care of transition from 360 to 0
-        self.data.azi_coords_inc = (azi_coords_inc + 360) % 360
-
-
-
-
-
-    ###################################################################
-    ### calculate coordinates of middle pixel for each box ###
-    ###################################################################
-    def get_pixel_center(self):           
+        # Take care of transition from 360 to 0
+        azi_coords = (azi_coords + 360) % 360
+        
+        # Return array of azimuth coordinates
+        return azi_coords
+    
+    def get_middle_pixel(self):           
+        '''Get coordinates of the center of the grid boxes
      
-        '''
-        Calculates polar coordination of the middle pixel for each 
-        polar grid box of radar data. 
+        Calculates polar coordinates of the middle of each 
+        polar grid box of the radar data array. 
         This is done by averaging azimuth angles and range values of 
         two adjacent data points respectively, for all data points.
         
-        The average can be calculated simply by adding (subtracting) 
-        half of the step to each value for data points at the near 
-        (far) edge of the grid box. (only works, if angle and range
-        step between 2 measurements don't change)
-        
-        The coordinates of the middle pixels are then saved
-        in form of a numpy meshgrid, which gives access to all
-        combinations of range and azimuth coordinates.
-
-        Input: None
-
-        Output: numpy meshgrid of range and azimuth coordinates of the
-        middle pixel of each polar grid box.
+        Returns:
+            (MiddleCoordinates object): Object, which saves the 
+                polar coordinates of middle pixels as attributes.
+                
         '''
-           
-        #define shorter names for the coordination arrays
-        range_coords = self.data.range_coords
-        azi_coords   = self.data.azi_coords_inc
+        # Create MiddleCoordinates object
+        mid_coords = MiddleCoordinates()
         
-        #get array of azi coords of middle pixels
-        azi_coords   = (azi_coords + self.data.azi_steps/\
-                        (2*self.res_fac)) % 360
+        # Get azimuth and range coordinates of radar data
+        azi_coords = self.get_azi_coords()
+        range_coords = self.get_range_coords()
         
-        #get array of range coords of middle pixels
-        range_coords = range_coords - self.data.r_steps/2
+        # Get array of azimuth coordinates of middle pixels
+        mid_coords.azi = (
+            (azi_coords + self.data.azi_steps/(2*self.res_fac)) % 360
+            )
+            
+        # Get array of range coords of middle pixels
+        mid_coords.range_ = range_coords - self.data.r_steps/2
         
-        #create a numpy meshgrid
-        pixel_center = np.meshgrid(range_coords, azi_coords)
-        
-        #return coords of middle pixels
-        return pixel_center
+        # Return coordinates of middle pixels
+        return mid_coords
     
-
-
-
-
-    ###################################################################
-    ### method to transform polar to cartesian coordinates ###
-    ###################################################################
-    def polar_to_cartesian(self,polar_range,polar_azi):
-      
+    def get_range_coords(self):
+        '''Calculate range coordinate array
+        
+        Calculates a coordinate array containing the range coordinates 
+        of all radar data points.
+        
+        Returns:
+            (numpy.ndarray): Range coordinates of corresponding radar 
+                data array.
+                
         '''
-        Uses a wradlib function to calculate lon/lat cartesian 
-        coordinates out of polar coordinates. Needs a wradlib 
-        environment to work. See wradlib.org for more details.
-
-        Input: Array of polar range coordinates, array of corresponding
-        polar azimuth coordinates.
-
-        Output: Array of cartesian longitude coordinates, array of 
-        corresponding cartesian latitude coordinates.
-        '''
+        # Define shorter names for attributes
+        start = self.data.r_start
+        steps = self.data.r_steps
+        bin_nr = self.data.r_bins
         
-        #transform polar coordinates to lon/lat cart. coordinates
-        #lon.shape and lat.shape = (360,600) = (azimuth,range)
-        lon,lat = wradlib.georef.polar2lonlat(
-                    polar_range, polar_azi,
-                    (self.data.lon_site, self.data.lat_site),
-                    re=6370040
-                    ) 
+        # Calculate range coordinates of data points
+        range_coords = np.arange(start, steps*bin_nr + start, steps)
         
-        #return cartesian coordinates
-        return lon, lat
-        
-          
-          
-     
-
-    ####################################################################
-    ### method to plot radar data ###
-    ####################################################################
+        # Return array of range coordinates
+        return range_coords
+   
     def plot(self):
+        '''Create plot of radar reflectivity
+        
+        This method creates a simple plot of original radar reflectivity
+        using wradlib. See wradlib.org for more information.
 
         '''
-        This method plots radar data without any interpolating.
-
-        Input: None
+        # Reflectivity array
+        dbz = self.data.refl
+        dbz_inc = self.increase_azi_res()
         
-        Output: None
-        '''
+        # Get time
+        time_start = self.data.time_start
+        time_end = self.data.time_end
         
+        # Get coordinates of data (transform range to km)
+        range_coords = self.get_range_coords()/1000
+        azi_coords = self.get_azi_coords()
         
+        # Put a mask on the reflectivity array
+        mask_ind = np.where(dbz_inc <= np.nanmin(dbz_inc))
+        dbz_inc[mask_ind] = np.nan
+        ma = np.ma.array(dbz_inc, mask=np.isnan(dbz_inc))
         
-        
-        
-        ################################################################
-        ### prepare plot ###
-        ################################################################
-        
-        '''
-        Prepares the plot by getting data and coordinates.
-        '''
-        
-        #reflectivity array
-        dbz           = self.data.refl
-        
-        #get time
-        time_start    = self.data.time_start
-        time_end      = self.data.time_end
-        
-        #get coordinates of data (transform range to km)
-        range_coords  = self.data.range_coords/1000
-        azi_coords    = self.data.azi_coords
-        
-        #put a mask on the reflectivity array
-        mask_ind      = np.where(dbz <= np.nanmin(dbz))
-        dbz[mask_ind] = np.nan
-        ma            = np.ma.array(dbz,mask=np.isnan(dbz))
-        
-        
-        
-        
-        
-        ################################################################
-        ### actual plot ###
-        ################################################################
-        
-        '''
-        Plots data 
-        '''
-        
-        #create colormap for plot (continously changing colormap)                                                                    
-        cmap     = mcolors.LinearSegmentedColormap.from_list(
-           'my colormap',['white','blue','red','magenta']
+        # Create colormap for plot (continously changing colormap)                                                                    
+        cmap = mcolors.LinearSegmentedColormap.from_list(
+           'my colormap', ['white', 'blue', 'red', 'magenta']
            )   
         
-        #create plot and grid
+        # Create plot and grid
         cgax, caax, paax, pm = wradlib.vis.plot_cg_ppi(
-            ma, range_coords, azi_coords, cmap = cmap, refrac = False,
-            vmin = -32.5, vmax = 70
+            ma, range_coords, azi_coords, cmap=cmap, refrac=False,
+            vmin=-32.5, vmax=70
             )
         
-        #create colorbar and increase tick labelsize
+        # Create colorbar and increase tick labelsize
         cbar = plt.colorbar(pm)
-        cbar.ax.tick_params(labelsize = 18)
+        cbar.ax.tick_params(labelsize=18)
         
-        #set labels
-        caax.set_xlabel('x_range [km]', fontsize = 18)
-        caax.set_ylabel('y_range [km]', fontsize = 18)
-        cbar.set_label('reflectivity [dbz]',fontsize = 18)
-        plt.text(1.0,1.05, 'azimuth', transform=caax.transAxes,
-           va='bottom', ha='right',fontsize = 18
+        # Set labels
+        caax.set_xlabel('x_range [km]', fontsize=18)
+        caax.set_ylabel('y_range [km]', fontsize=18)
+        cbar.set_label('reflectivity [dbz]', fontsize=18)
+        plt.text(1.0, 1.05, 'azimuth', transform=caax.transAxes,
+           va='bottom', ha='right', fontsize=18
            )
         
-        #set tick-label size
+        # Set tick-label size
         caax.tick_params(labelsize=16)
         cgax.axis['top'].major_ticklabels.set_fontsize(16)
         cgax.axis['right'].major_ticklabels.set_fontsize(16)
         
-        #create  title
-        plt.title(self.name + ': ' + str(time_start.time()) + ' - '\
-            + str(time_end.time()) + ' UTC \n' + str(time_start.date()),
-            y = 1.05, fontsize = 22
+        # Create  title
+        plt.title(
+            self.name
+            + ': '
+            + str(time_start.time())
+            + ' - '
+            + str(time_end.time())
+            + ' UTC \n'
+            + str(time_start.date()),
+            y=1.05, fontsize=22
             )
         
-        #show plot
+        # Show plot
         plt.show()
+ 
+    def polar_to_cartesian(self, r, az):
+        '''Transform polar to cartesian coordinates
+        
+        Uses a wradlib function to calculate lon/lat cartesian 
+        coordinates out of polar coordinates. 
+
+        Args:
+            r (numpy.ndarray): Range coordinates.
+            az (numpy.ndarray): Azimuth angles with values between 0° 
+                and 360°, assumed to start with 0° pointing north and 
+                counted positiv clockwise. 
+       
+        Returns:
+            (CartesianCoordinates object): Object, which saves cartesian 
+                coordinates of radar data as attributes.
+                
+        '''
+        # Create CartesianCoordinates object
+        cart_coords = CartesianCoordinates()
+        
+        # Transform polar coordinates to lon/lat cart. coordinates
+        cart_coords.lon, cart_coords.lat = wradlib.georef.polar2lonlat(
+            r, az, (self.data.lon_site, self.data.lat_site)
+            ) 
+        
+        # Return cartesian coordinates
+        return cart_coords
+        
+    def read_file(self):
+        '''Reading data file
+        
+        This method is specified in the subclasses, since reading files
+        differs from radar to radar.
+        
+        Raises:
+            NotImplementedError: If this method is called.
+        
+        '''
+        raise NotImplementedError
         
         
+class CartesianCoordinates(Radar):
+    '''Saves cartesian coordinates of radar data'''
+    
+    def __init__(self):
+        '''Initialization of object
         
+        Does nothing so far.
+        
+        '''
+        pass
+    
+    @property
+    def lon(self):
+        '''Longitude coordinates
+        
+        Longitude coordinates of radar data. Must be numpy.ndarray.
+        
+        '''
+        try:
+            return self._lon
+        except AttributeError:
+            return 0
+    
+    @lon.setter
+    def lon(self, new_lon):
+        assert(
+            isinstance(new_lon, np.ndarray)
+            ), 'new_lon not a numpy.ndarray'
+        self._lon = new_lon
+    
+    @property
+    def lat(self):
+        '''Latitude coordinates
+        
+        Latitude coordinates of radar data. Must be numpy.ndarray.
+        
+        '''
+        try:
+            return self._lat
+        except AttributeError:
+            return 0
+    
+    @lat.setter
+    def lat(self, new_lat):
+        assert(
+            isinstance(new_lat, np.ndarray)
+            ), 'new_lat not a numpy.ndarray'
+        self._lat = new_lat
+
+
+class MiddleCoordinates(Radar):
+    '''Saves coordinates of grid box middle pixels'''
+    
+    def __init__(self):
+        '''Initialization of object
+        
+        Does nothing so far.
+        
+        '''
+        pass
+       
+    @property
+    def azi(self):
+        '''Azimuth coordinates
+        
+        Azimuth coordinates of grid box mids. Must be numpy.ndarray.
+        
+        '''
+        try:
+            return self._azi
+        except AttributeError:
+            return 0
+    
+    @azi.setter
+    def azi(self, new_azi):
+        assert(
+            isinstance(new_azi, np.ndarray)
+            ), 'new_azi not a numpy.ndarray'
+        self._azi = new_azi
+    
+    @property
+    def range_(self):
+        '''Range coordinates
+        
+        Range coordinates of grid box mids. Must be numpy.ndarray.
+        
+        '''
+        try:
+            return self._range_
+        except AttributeError:
+            return 0
+    
+    @range_.setter
+    def range_(self, new_range_):
+        assert(
+            isinstance(new_range_, np.ndarray)
+            ), 'new_range_ not a numpy.ndarray'
+        self._range_ = new_range_
+    
