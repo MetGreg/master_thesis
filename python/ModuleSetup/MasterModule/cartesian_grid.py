@@ -1,13 +1,12 @@
-'''This module contains the CartesianGrid, the GridCorner and the 
-GridCoordinates class.
-CartesianGrid: Calculations on cartesian grids near the equator.
-GridCorner: Saving coordinates of cartesian grid corners.
-GridCoordinates: Saving coordinates of cartesian grid boxes.
+'''Class for cartesian grids covering a defined area'''
 
-'''
 # Python modules
 import numpy as np
 import wradlib
+
+# MasterModule
+from .grid_corners import GridCorners
+from .grid_coordinates import GridCoordinates
 
 
 class CartesianGrid(object):
@@ -17,7 +16,7 @@ class CartesianGrid(object):
     covering a specific area. When creating an object of this class,
     the grid parameters, e.g resolution, area covered and the 
     coordinates of each grid box are saved as attributes. 
-    Using this class, it is possible to convert distances in m to 
+    Using this class, it is possible to convert distances in meters to 
     lon/lat differences in degrees and vice versa. Also you can 
     calculate and save the grid indices of the cartesian grid, which 
     are corresponding to an array of rotated pole coordinates. Radar 
@@ -36,15 +35,15 @@ class CartesianGrid(object):
         to rotate your grid to the equator.
             
     Attributes:
-        lon_site (float): Longitude coordinate of grid middle.
-        lat_site (float): Latitude coordinate of grid middle.
-        res_m (float): Grid resolution in meters.
-        res_deg (float): Grid resolution in degree.
-        lon_shape (int): Number of longitude grid boxes.
-        lat_shape (int): Number of latitude grid boxes.
-        corners (GridCorners object): Object with coordinates of grid
+        lon_site (:any:`float`): Longitude coordinate of grid middle.
+        lat_site (:any:`float`): Latitude coordinate of grid middle.
+        res_m (:any:`float`): Grid resolution in meters.
+        res_deg (:any:`float`): Grid resolution in degree.
+        lon_shape (:any:`int`): Number of longitude grid boxes.
+        lat_shape (:any:`int`): Number of latitude grid boxes.
+        corners (:any:`GridCorners`): Object with coordinates of grid
             corners as attributes.
-        coords (GridCoords object): Object with coordinates of grid 
+        coords (:any:`GridCoordinates`): Object with coordinates of grid 
             boxes as attributes.
             
     '''
@@ -134,7 +133,7 @@ class CartesianGrid(object):
             
         Returns:
             (numpy.ndarray): To cartesian grid interpolated reflectivity
-                data.
+            data.
                 
         '''
         # Load index matrix
@@ -168,7 +167,7 @@ class CartesianGrid(object):
         
         Returns:
             (numpy.ndarray): To the difference in lon/lat coordinates 
-                corresponding distance in meters.
+            corresponding distance in meters.
             
         '''
         # Calculate distance
@@ -190,7 +189,7 @@ class CartesianGrid(object):
         
         Returns:
             (numpy.ndarray): Heights of radar beam above ground in 
-                meters.
+            meters.
                 
         '''
         # Get distance of grid box to radar site 
@@ -209,8 +208,8 @@ class CartesianGrid(object):
         coordinates.
         
         Returns:
-            (GridCoordinates object): Object, where grid coordinates are
-                saved as attributes.
+            (GridCoordinates): Object, where grid coordinates are
+            saved as attributes.
                 
         '''
         # Create grid_coords object
@@ -241,7 +240,7 @@ class CartesianGrid(object):
                  
         Returns:
             (numpy.ndarray): Distance of each grid box to the input 
-                location.
+            location.
 
         '''
         # Get numpy meshgrid
@@ -268,8 +267,8 @@ class CartesianGrid(object):
         cartesian grid.
         
         Returns:
-            (GridCorners object): Object, which saves coordinates of 
-                grid corners as attributes.
+            (GridCorners): Object, which saves coordinates of 
+            grid corners as attributes.
         
         ''' 
         #create grid_corners object
@@ -301,8 +300,8 @@ class CartesianGrid(object):
         
         Returns:
             (numpy.ndarray): Boolean array with the same shape as 
-                the cartesian grid, where "True" means masked, and 
-                "False" means not masked.
+            the cartesian grid, where "True" means masked, and 
+            "False" means not masked.
                  
         '''
         # Create empty array with shape of cartesian grid. 
@@ -333,7 +332,7 @@ class CartesianGrid(object):
         
         Returns:
             (numpy.ndarray): To the distance corresponding difference in
-                lon/lat coordinates in degrees.
+            lon/lat coordinates in degrees.
             
         '''
         # Calculate to distance corresponding angle
@@ -341,144 +340,4 @@ class CartesianGrid(object):
         
         # Return angle
         return degrees
-    
-
-class GridCorners(CartesianGrid):
-    '''Saves coordinates of grid corners'''
-    
-    def __init__(self):
-        '''Initialization of object
-        
-        Does nothing so far.
-        
-        '''
-        pass
-        
-    @property
-    def lon_start(self):
-        '''Starting Longitude of grid
-        
-        Starting longitude of cartesian grid. Must be float.
-        
-        '''
-        try:
-            return self._lon_start
-        except AttributeError:
-            return 0
-        
-    @lon_start.setter
-    def lon_start(self, new_lon_start):
-        assert(
-            isinstance(new_lon_start, float)
-            ), 'new_lon_start not a float'
-        self._lon_start = new_lon_start
-
-    @property
-    def lon_end(self):
-        '''Ending Longitude of grid
-        
-        Ending longitude of cartesian grid. Must be float.
-        
-        '''
-        try:
-            return self._lon_end
-        except AttributeError:
-            return 0
-        
-    @lon_end.setter
-    def lon_end(self, new_lon_end):
-        assert(
-            isinstance(new_lon_end, float)
-            ), 'new_lon_end not a float'
-        self._lon_end = new_lon_end
-    
-    @property
-    def lat_start(self):
-        '''Starting latitude of grid
-        
-        Starting latitude of cartesian grid. Must be float.
-        
-        '''
-        try:
-            return self._lat_start
-        except AttributeError:
-            return 0
-        
-    @lat_start.setter
-    def lat_start(self, new_lat_start):
-        assert(
-            isinstance(new_lat_start, float)
-            ), 'new_lat_start not a float'
-        self._lat_start = new_lat_start
-
-    @property
-    def lat_end(self):
-        '''Ending latitude of grid
-        
-        Ending latitude of cartesian grid. Must be float.
-        
-        '''
-        try:
-            return self._lat_end
-        except AttributeError:
-            return 0
-        
-    @lat_end.setter
-    def lat_end(self, new_lat_end):
-        assert(
-            isinstance(new_lat_end, float)
-            ), 'new_lat_end not a float'
-        self._lat_end = new_lat_end
-
-
-class GridCoordinates(CartesianGrid):
-    '''Saves grid coordinates'''
-    
-    def __init__(self):
-        '''Initialization of object
-        
-        Does nothing so far.
-        
-        '''
-        pass
-    
-    @property
-    def lon(self):
-        '''Longitude coordinates
-        
-        Longitude coordinates of grid boxes of cartesian grid. Must be 
-        numpy.ndarray.
-        
-        '''
-        try:
-            return self._lon
-        except AttributeError:
-            return 0
-        
-    @lon.setter
-    def lon(self, new_lon):
-        assert(
-            isinstance(new_lon, np.ndarray)
-            ), 'new_lon not a float'
-        self._lon = new_lon
-    
-    @property
-    def lat(self):
-        '''Latitude coordinates
-        
-        Latitude coordinates of grid boxes of cartesian grid. Must be 
-        numpy.ndarray.
-        
-        '''
-        try:
-            return self._lat
-        except AttributeError:
-            return 0
-        
-    @lat.setter
-    def lat(self, new_lat):
-        assert(
-            isinstance(new_lat, np.ndarray)
-            ), 'new_lat not a float'
-        self._lat = new_lat
     

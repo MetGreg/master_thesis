@@ -1,5 +1,5 @@
-'''This module only contains the DwdRadar class, which can be used for 
-a typical Dwd datafile in hdf5-format.
+'''Class for DWD radar data in 
+`hdf5 <https://support.hdfgroup.org/HDF5/>`_-format
 
 '''
 # Python modules
@@ -13,18 +13,21 @@ from .radar_data import RadarData
 
 
 class DwdRadar(Radar):
-    '''Class for Dwd radar data in hdf5-format
+    '''Class for Dwd radar data in `hdf5 <https://support.hdfgroup.org/HDF5/>`_-format
     
     This class is designed for data coming from the "Deutscher 
-    Wetterdienst" in hdf5-format. It is a subclass of the more general
-    "Radar" class. Using this class, an hdf5-file from the DWD can be 
-    read in to save all important information.
+    Wetterdienst" in 
+    `hdf5 <https://support.hdfgroup.org/HDF5/>`_-format. It is a 
+    subclass of the more general :any:`Radar` class. Using this class, 
+    an `hdf5 <https://support.hdfgroup.org/HDF5/>`_-file from the DWD 
+    can be read in to save all important information.
     
     Attributes:
-        name (str): Name of the operating institute. In this case 'DWD'.
-        offset (int): Angle, by which the radar is rotated. 0 for DWD
-            radar.
-        data (RadarData object): Used to save all kind of general radar 
+        name (:any:`str`): Name of the operating institute. In this case
+            'DWD'.
+        offset (:any:`int`): Angle, by which the radar is rotated. 0 for 
+            DWD radar.
+        data (:any:`RadarData`): Used to save all kind of general radar 
             data and meta data.
             
     '''
@@ -32,8 +35,8 @@ class DwdRadar(Radar):
     def __init__(self, radar_par):
         '''Initialization of object
         
-        Saves attributes to object and calls Initialization method of 
-        super class.
+        Saves attributes to object and calls 
+        :any:`Radar.__init__`-method.
         
         Args:
             radar_par (dict): Radar parameters, e.g. name of file, 
@@ -46,7 +49,7 @@ class DwdRadar(Radar):
         super().__init__(radar_par)
         
         # Save attributes to object
-        self.name = 'dwd'
+        self.name = 'DWD'
         self.offset = 0 # dwd radar has no offset         
         
     def read_file(self, radar_par):
@@ -55,7 +58,8 @@ class DwdRadar(Radar):
         Reads dwd radar data and saves data to object. Only attributes 
         needed for my calculations are read in. If more information 
         about the file and the attributes is wished, check out the 
-        hdf5-file with hdfview or hd5dump -H.
+        `hdf5 <https://support.hdfgroup.org/HDF5/>`_-file with hdfview 
+        or hd5dump -H.
        
         Args:
             radar_par (dict): Radar parameters, e.g. name of file, 

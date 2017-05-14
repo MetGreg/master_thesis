@@ -17,9 +17,12 @@ help:
 
 .PHONY: docs
 docs: 
-	sphinx-apidoc -M -f -o $(DOCS_RST_FOLDER) $(PACKAGE_FOLDER)
+	sphinx-apidoc -o $(DOCS_RST_FOLDER) $(PACKAGE_FOLDER)
+	cd $(DOCS_RST_FOLDER) && rm -f MasterModule.rst
+	cd docs/source && python3 get_classes.py && python3 get_scripts.py
 	cd $(DOCS_FOLDER) && make html
 
 .PHONY: clean
 clean: 
+	cd $(DOCS_RST_FOLDER) && rm -rf stubs
 	cd $(DOCS_FOLDER) && make clean

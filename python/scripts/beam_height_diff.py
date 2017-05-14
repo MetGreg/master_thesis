@@ -1,6 +1,6 @@
 '''
-This program plots differences in height between two radars (pattern or
-dwd) on a cartesian grid.
+This program plots differences in height between two radars (PATTERN or
+DWD) on a cartesian grid.
 
 '''
 
@@ -25,6 +25,7 @@ from MasterModule.cartesian_grid import CartesianGrid
 from MasterModule.dwd_radar import DwdRadar  
 from MasterModule.heights_plot import HeightsPlot
 from MasterModule.pattern_radar import PatternRadar
+from MasterModule.pattern_radar_v2 import PatternRadarV2
 
 # Functions
 from functions import rotate_pole
@@ -74,21 +75,25 @@ and processing step.
 '''
 # First radar
 # For dwd radars
-if re.search('dwd_rad_boo', radar1_par['file']):
+if re.search('dwd', radar1_par['file']):
     radar1 = DwdRadar(radar1_par)
-
-# For pattern radars
-elif re.search('level2', radar1_par['file']):
+# pattern with version1 processing
+elif re.search('version1', radar1_par['file']):
     radar1 = PatternRadar(radar1_par)
+# pattern with version2 processing
+elif re.search('version2', radar1_par['file']):
+    radar1 = PatternRadarV2(radar1_par)
 
 # Second radar
 # For dwd radars
-if re.search('dwd_rad_boo', radar2_par['file']):
+if re.search('dwd', radar2_par['file']):
     radar2 = DwdRadar(radar2_par)
-
-# For pattern radars
-elif re.search('level2', radar2_par['file']):
+# pattern with version1 processing
+elif re.search('version1', radar2_par['file']):
     radar2 = PatternRadar(radar2_par)
+# pattern with version2 processing
+elif re.search('version2', radar2_par['file']):
+    radar2 = PatternRadarV2(radar2_par)
 
 # Create list of both radar objectives, for easy looping
 radars = [radar1, radar2]

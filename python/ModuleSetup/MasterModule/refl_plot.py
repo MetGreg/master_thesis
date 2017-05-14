@@ -1,7 +1,5 @@
-'''This module only contains the ReflPlot class, which can be used to
-plot reflectivity on a cartesian grid.
+'''Class for plots of reflectivity on cartesian grids'''
 
-'''
 # Python modules
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap as lsc
@@ -11,18 +9,18 @@ from .grid_plot import GridPlot
 
 
 class ReflPlot(GridPlot):
-    '''Class for plotting reflectivity data on a cartesian grid.
+    '''Class for plotting reflectivity data on a cartesian grid
     
-    This is a subclass of the GridPlot class. Using this class, you
-    can plot interpolated radar reflectivity on a cartesian grid. 
+    This is a subclass of the :any:`GridPlot` class. Using this class, 
+    you can plot interpolated radar reflectivity on a cartesian grid. 
     
     '''
 
     def __init__(self, grid_par, plot_par):
         '''Initialization of object
         
-        While initializing, only the init-method of super class will be
-        called.
+        While initializing, only the :any:`GridPlot.__init__`-method 
+        will be called.
         
         Args:
             grid_par (dict): Grid parameters, e.g. location, resolution
@@ -51,7 +49,7 @@ class ReflPlot(GridPlot):
             )
 
         # Create subplot
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(8,8))
 
         # Create imshow plot
         plt.imshow(refl_array[::-1], cmap=cmap, zorder=1)                  

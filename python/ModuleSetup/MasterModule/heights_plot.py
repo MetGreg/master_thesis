@@ -1,7 +1,5 @@
-'''This module only contains the HeightsPlot class, which can be used
-to create height isolines on a cartesian grid.
+'''Class for plots of heights on cartesian grids'''
 
-'''
 # Python modules
 import matplotlib.pyplot as plt
 import numpy.ma as ma
@@ -13,19 +11,19 @@ from .grid_plot import GridPlot
 class HeightsPlot(GridPlot):
     '''Class for plots of beam heights on a cartesian grid
     
-    This class is the subclass of the GridPlot class. Using this class,
-    one can create a plot of height isolines on a cartesian grid.
+    This class is the subclass of the :any:`GridPlot` class. Using this 
+    class, one can create a plot of height isolines on a cartesian grid.
     
     Attributes:
-        height_iso (numpy.ndarray): Array of height isolines to be 
-            plotted.
+        height_iso (:any:`numpy.ndarray`): Array of height isolines to 
+            be plotted.
         
     '''
 
     def __init__(self, grid_par, plot_par):
         '''Initialization of object
         
-        Calls init-method of super class and saves attributes.
+        Calls the :any:`GridPlot.__init__`-method and saves attributes.
         
         Args:
             grid_par (dict): Grid parameters, e.g. location, resolution
@@ -57,7 +55,7 @@ class HeightsPlot(GridPlot):
         masked_height = ma.masked_array(heights, mask=self.mask)
         
         # Create subplot
-        fig, ax = plt.subplots() 
+        fig, ax = plt.subplots(figsize=(8,8)) 
   
         # Plot the contours
         CS = plt.contour(
@@ -94,6 +92,6 @@ class HeightsPlot(GridPlot):
         
         # Prevent parts of picture to be cut off
         plt.tight_layout()
-
+        
         # Show plot
         plt.show()

@@ -1,7 +1,5 @@
-'''This module only contains the GridPlot class, which can be used for
-different plots on a cartesian grid.
+'''Class for general plots on cartesian grids'''
 
-'''
 # Python modules
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap as lsc
@@ -13,34 +11,35 @@ from .cartesian_grid import CartesianGrid
 class GridPlot(CartesianGrid):
     '''Class for plotting on a cartesian grid
     
-    This class is a subclass of the CartesianGrid class and the super
-    class of ReflPlot, HeightsPlot and ReflDiffPlot. This class only 
-    saves all general attributes, which are the same for all kind of 
-    plots on a cartesian grid.
+    This class is a subclass of the :any:`CartesianGrid` class and the 
+    super class of :any:`ReflPlot`, :any:`HeightsPlot` and 
+    :any:`ReflDiffPlot`. This class only saves all general attributes, 
+    which are the same for all kind of plots on a cartesian grid.
     
     Attributes:
-        log_iso (bool): If True --> isolines around rain areas will be 
+        log_iso (:any:`bool`): If True --> isolines around rain areas will be 
             plotted.
-        rain_th (int): Dbz threshold, at which rain is assumed.
-        lon_plot (numpy.ndarray): All longitude ticks.
-        lat_plot (numpy.ndarray): All latitude ticks.
-        lon_ticks (numpy.ndarray): Longitude ticks, which will be 
+        rain_th (:any:`int`): Dbz threshold, at which rain is assumed.
+        lon_plot (:any:`numpy.ndarray`): All longitude ticks.
+        lat_plot (:any:`numpy.ndarray`): All latitude ticks.
+        lon_ticks (:any:`numpy.ndarray`): Longitude ticks, which will be 
             labeled.
-        lat_ticks (numpy.ndarray): Latitute ticks, which will be 
+        lat_ticks (:any:`numpy.ndarray`): Latitute ticks, which will be 
             labeled.
-        lon_label (numpy.ndarray): Labels of Longitude ticks.
-        lat_label (numpy.ndarray): Labels of Latitude ticks.
-        mask (numpy.ndarray): Mask array.
-        cm_mask (matplotlib.colors.LinearSegmentedColormap): Colormap 
-            for the mask.
+        lon_label (:any:`numpy.ndarray`): Labels of Longitude ticks.
+        lat_label (:any:`numpy.ndarray`): Labels of Latitude ticks.
+        mask (:any:`numpy.ndarray`): Mask array.
+        cm_mask (:any:`matplotlib.colors.LinearSegmentedColormap`): 
+            Colormap for the mask.
         
     '''
 
     def __init__(self, grid_par, plot_par):
         '''Initialization of GridPlot
         
-        Calls the init-method of super class and saves all general 
-        attributes needed for creating a plot on a cartesian grid.        
+        Calls the :any:`CartesianGrid.__init__`-method and saves all 
+        general attributes needed for creating a plot on a cartesian 
+        grid.        
         
         Args:
             grid_par (dict): Grid parameters, e.g. location, resolution
@@ -92,9 +91,9 @@ class GridPlot(CartesianGrid):
     def make_plot(self):
         '''Create a plot on a cartesian grid
         
-        This method belongs to specific subclasses ReflPlot,
-        HeightPlot or ReflDiffPlot. When the method is called from this
-        superclass, raise an Error.
+        This method belongs to specific subclasses :any:`ReflPlot`,
+        :any:`HeightsPlot` or :any:`ReflDiffPlot`. When the method is 
+        called from this superclass, raise an Error.
         
         Raises:
             NotImplementedError: If this method is called.

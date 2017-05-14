@@ -26,6 +26,7 @@ from pathlib import Path
 from MasterModule.cartesian_grid import CartesianGrid
 from MasterModule.dwd_radar import DwdRadar
 from MasterModule.pattern_radar import PatternRadar
+from MasterModule.pattern_radar_v2 import PatternRadarV2
 from MasterModule.refl_plot import ReflPlot
 
 # Parameter
@@ -47,7 +48,7 @@ Some parameters, that can be set in parameters.py.
 
 '''
 grid_par = par.grid_par 
-radar_par = par.radar_par 
+radar_par = par.radar1_par 
 plot_par = par.plot_par 
 
 
@@ -70,12 +71,14 @@ and processing step.
 
 '''
 # dwd radars
-if re.search('dwd_rad_boo', radar_par['file']):
+if re.search('dwd', radar_par['file']):
     radar = DwdRadar(radar_par)
-    
-# pattern radars
-elif re.search('level2', radar_par['file']):
+# pattern with version1 processing
+elif re.search('version1', radar_par['file']):
     radar = PatternRadar(radar_par)
+# pattern with version2 processing
+elif re.search('version2', radar_par['file']):
+    radar = PatternRadarV2(radar_par)
     
 # Create cartesian grid object
 car_grid = CartesianGrid(grid_par)

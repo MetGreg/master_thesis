@@ -1,5 +1,5 @@
 '''
-Calculates and plots heights of middle of pattern or dwd radar beam.
+Calculates and plots heights of middle of PATTERN or DWD radar beam.
 
 '''
 
@@ -24,6 +24,7 @@ from MasterModule.cartesian_grid import CartesianGrid
 from MasterModule.dwd_radar import DwdRadar 
 from MasterModule.heights_plot import HeightsPlot  
 from MasterModule.pattern_radar import PatternRadar
+from MasterModule.pattern_radar_v2 import PatternRadarV2
 
 # Parameters
 import parameters as par 
@@ -44,7 +45,7 @@ Get parameters. Parameters can be set in parameters.py
 
 '''
 grid_par = par.grid_par
-radar_par = par.radar_par
+radar_par = par.radar1_par
 plot_par = par.plot_par
 
 
@@ -57,7 +58,8 @@ plot_par = par.plot_par
 
 '''
 Creates following objects:
-- DwdRadar or PatternRadar (depending on input file) to read in data
+- DwdRadar, PatternRadar or PatternRadarV2 (depending on input file) to 
+    read in data
 - CartesianGrid for interpolating data to Cartesian Grid
 - HeightsPlot for plotting heights
 
@@ -67,12 +69,14 @@ and processing step.
 
 '''
 # dwd radars
-if re.search('dwd_rad_boo', radar_par['file']):
+if re.search('dwd', radar_par['file']):
     radar = DwdRadar(radar_par)
-
-# pattern radars
-elif re.search('level2', radar_par['file']):
+# pattern with version1 processing
+elif re.search('version1', radar_par['file']):
     radar = PatternRadar(radar_par)
+# pattern with version2 processing
+elif re.search('version2', radar_par['file']):
+    radar = PatternRadarV2(radar_par)
 
 # Cartesian Grid object
 car_grid = CartesianGrid(grid_par)

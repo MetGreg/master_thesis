@@ -1,7 +1,5 @@
-'''This module only contains the ReflDiffPlot class, which can be used
-to plot reflectivity differences on a cartesian grid.
+'''Class for plots of reflectivity differences on cartesian grids'''
 
-'''
 # Python modules
 import matplotlib.pyplot as plt
 from skimage import measure
@@ -13,16 +11,16 @@ from .grid_plot import GridPlot
 class ReflDiffPlot(GridPlot):
     '''Class for difference plots on a cartesian grid
     
-    This class is a subclass of the GridPlot class. It can be used to
-    plot reflectivity differences of two radars (Pattern or DWD) on a 
-    cartesian grid.
+    This class is a subclass of the :any:`GridPlot` class. It can be 
+    used to plot reflectivity differences of two radars (PATTERN or DWD)
+    on a cartesian grid.
     
     '''
 
     def __init__(self, grid_par, plot_par):
         '''Initialization of object
         
-        Calls init-method of super class.
+        Calls the :any:`GridPlot.__init__`-method.
        
         Args:
             grid_par (dict): Grid parameters, e.g. location, resolution
@@ -54,7 +52,7 @@ class ReflDiffPlot(GridPlot):
         refl_diff = data2 - data1
 
         # Create subplot
-        fig, ax = plt.subplots() 
+        fig, ax = plt.subplots(figsize=(10,10)) 
         
         # Create heatmap                                                                                                              
         plt.imshow(

@@ -1,37 +1,34 @@
-''' This module contains the Radar, the CartesianCoordinates and the 
-MiddleCoordinates class.
-Radar: For calculations with radar data of Pattern or DWD.
-CartesianCoordinates: Saves cartesian coordinates of radar data.
-MiddleCoordinates: Saves polar coordinates of middle of grid boxes.
+''' Class for general radar data from Pattern or DWD'''
 
-'''
 # Python modules
 import wradlib
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt 
 import numpy as np
 
+# MasterModule
+from .cartesian_coordinates import CartesianCoordinates
+from .middle_coordinates import MiddleCoordinates
 
 class Radar(object):
     '''Class for general radar data
     
-    This class creates a Radar object, which can be used for pattern
-    netcdf - data as well as hdf5-data from the 'Deutscher Wetterdienst'
-    (DWD). Using this class, it is possible to artificially increase
-    the azimuth resolution of the data. You can calculate azimuth-
-    and range coordinate arrays. Further, you can calculate the polar
-    coordinates of the middle of each polar grid box of the radar data, 
-    as well as transforming polar coordinates to longitude/latitude
-    cartesian coordinates. Finally, using this class, you can simply
-    plot the original reflectivity data.
+    This class creates a Radar object, which can be used for 
+    PATTERN data as well as DWD data. Using  this class, it is possible 
+    to artificially increase the azimuth resolution of the data. You can
+    calculate azimuth- and range coordinate arrays. Further, you can 
+    calculate the polar coordinates of the middle of each polar grid box
+    of the radar data, as well as transforming polar coordinates to 
+    longitude/latitude cartesian coordinates. Finally, using this class,
+    you can simply plot the original reflectivity data.
     
     Note:
         Most of the methods only work, if the radar data was succesfully 
-        read in already, using the read_file method of the DwdRadar
-        or PatternRadar subclass. 
+        read in already, using :any:`DwdRadar.read_file` or 
+        :any:`PatternRadar.read_file`.  
     
     Attributes:
-        res_fac (int): Factor, by which the azimuth angle will be 
+        res_fac (:any:`int`): Factor, by which the azimuth angle will be 
             increased artificially.
         
     '''
@@ -82,7 +79,7 @@ class Radar(object):
         
         Returns:
             (numpy.ndarray): azimuth coordinates of corresponding radar 
-                data array.
+            data array.
         
         '''
         # Define shorter names for attributes
@@ -111,8 +108,8 @@ class Radar(object):
         two adjacent data points respectively, for all data points.
         
         Returns:
-            (MiddleCoordinates object): Object, which saves the 
-                polar coordinates of middle pixels as attributes.
+            (MiddleCoordinates): Object, which saves the 
+            polar coordinates of middle pixels as attributes.
                 
         '''
         # Create MiddleCoordinates object
@@ -141,7 +138,7 @@ class Radar(object):
         
         Returns:
             (numpy.ndarray): Range coordinates of corresponding radar 
-                data array.
+            data array.
                 
         '''
         # Define shorter names for attributes
@@ -235,8 +232,8 @@ class Radar(object):
                 counted positiv clockwise. 
        
         Returns:
-            (CartesianCoordinates object): Object, which saves cartesian 
-                coordinates of radar data as attributes.
+            (CartesianCoordinates): Object, which saves cartesian 
+            coordinates of radar data as attributes.
                 
         '''
         # Create CartesianCoordinates object
@@ -262,103 +259,5 @@ class Radar(object):
         '''
         raise NotImplementedError
         
-        
-class CartesianCoordinates(Radar):
-    '''Saves cartesian coordinates of radar data'''
-    
-    def __init__(self):
-        '''Initialization of object
-        
-        Does nothing so far.
-        
-        '''
-        pass
-    
-    @property
-    def lon(self):
-        '''Longitude coordinates
-        
-        Longitude coordinates of radar data. Must be numpy.ndarray.
-        
-        '''
-        try:
-            return self._lon
-        except AttributeError:
-            return 0
-    
-    @lon.setter
-    def lon(self, new_lon):
-        assert(
-            isinstance(new_lon, np.ndarray)
-            ), 'new_lon not a numpy.ndarray'
-        self._lon = new_lon
-    
-    @property
-    def lat(self):
-        '''Latitude coordinates
-        
-        Latitude coordinates of radar data. Must be numpy.ndarray.
-        
-        '''
-        try:
-            return self._lat
-        except AttributeError:
-            return 0
-    
-    @lat.setter
-    def lat(self, new_lat):
-        assert(
-            isinstance(new_lat, np.ndarray)
-            ), 'new_lat not a numpy.ndarray'
-        self._lat = new_lat
 
 
-class MiddleCoordinates(Radar):
-    '''Saves coordinates of grid box middle pixels'''
-    
-    def __init__(self):
-        '''Initialization of object
-        
-        Does nothing so far.
-        
-        '''
-        pass
-       
-    @property
-    def azi(self):
-        '''Azimuth coordinates
-        
-        Azimuth coordinates of grid box mids. Must be numpy.ndarray.
-        
-        '''
-        try:
-            return self._azi
-        except AttributeError:
-            return 0
-    
-    @azi.setter
-    def azi(self, new_azi):
-        assert(
-            isinstance(new_azi, np.ndarray)
-            ), 'new_azi not a numpy.ndarray'
-        self._azi = new_azi
-    
-    @property
-    def range_(self):
-        '''Range coordinates
-        
-        Range coordinates of grid box mids. Must be numpy.ndarray.
-        
-        '''
-        try:
-            return self._range_
-        except AttributeError:
-            return 0
-    
-    @range_.setter
-    def range_(self, new_range_):
-        assert(
-            isinstance(new_range_, np.ndarray)
-            ), 'new_range_ not a numpy.ndarray'
-        self._range_ = new_range_
-    

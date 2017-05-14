@@ -1,5 +1,5 @@
 '''
-This program calculates the angle of the sun, as seen by the pattern 
+This program calculates the angle of the sun, as seen by the PATTERN 
 radar.
 
 Program only works, if sun can be seen in radar image, and no rain is 
@@ -24,6 +24,7 @@ import re
 
 # MasterModule
 from MasterModule.pattern_radar import PatternRadar
+from MasterModule.pattern_radar_v2 import PatternRadarV2
 
 # Parameters
 import parameters as par
@@ -41,7 +42,7 @@ Get parameters. Parameters can be set in parameters.py
 
 '''
 # Parameter
-radar_par = par.radar_par  
+radar_par = par.radar1_par  
 
 # Lists
 l_refl = [] #list with entry for each azimuth with integr. refl. 
@@ -55,8 +56,8 @@ l_refl = [] #list with entry for each azimuth with integr. refl.
 ########################################################################
 
 '''
-This program only works for pattern radars. Check, if input file is
-pattern data.
+This program only works for PATTERN radars. Check, if input file is
+PATTERN data.
 
 '''
 assert(
@@ -73,10 +74,15 @@ assert(
 
 '''
 Creates objects needed for this program:
- - Pattern object to read in data.
+ - PATTERN object to read in data.
 
 '''
-radar = PatternRadar(radar_par)
+# pattern with version1 processing
+if re.search('version1', radar_par['file']):
+    radar = PatternRadar(radar_par)
+# pattern with version2 processing
+elif re.search('version2', radar_par['file']):
+    radar = PatternRadarV2(radar_par)
 
 
 

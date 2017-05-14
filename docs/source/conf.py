@@ -37,9 +37,16 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
-    'sphinx.ext.viewcode'
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary'
     ]
-    
+
+#create stub folder automatically
+autosummary_generate = True
+
+#show classes on own page
+autodoc_default_flags = ['members']
+
 #Add __init__ method of classes to documentation
 def skip(app, what, name, obj, skip, options):
     if name == '__init__':
@@ -173,5 +180,10 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-
+# Intersphinx links
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3.5', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'matplotlib': ('http://matplotlib.org/', None)
+    }
 
