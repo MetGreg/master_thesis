@@ -26,7 +26,7 @@ the parameters to match your intentions.
    
 .. toctree::
    :maxdepth: 1
-   
+
    scripts/beam_height
    scripts/beam_height_diff
    scripts/cartesian_plot
